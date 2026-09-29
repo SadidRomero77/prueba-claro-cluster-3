@@ -1,0 +1,182 @@
+{
+  "n_filas": 20000,
+  "n_columnas": 129,
+  "duplicados": 0,
+  "constantes": [
+    "CLUSTER_ID",
+    "PERIODO",
+    "BAN_DESPOSICIONADO_COMPETENCIA",
+    "BAN_DESPOSICIONADO_COMERCIAL",
+    "BAN_DESPOSICIONADO_TENOLOGICO",
+    "BAN_SUSPENCION_COBRANZA",
+    "BAN_MIGRACION_ZONA",
+    "VAL_SS_BCART",
+    "VAL_LLAMADAS_MES_CALLCENTER",
+    "VAL_PENETRACION_NODO",
+    "VAL_CHURN_ZONA",
+    "BAN_DESPOSICIONADO_NODO",
+    "TIPO_TV_CLAROTV_B",
+    "TIPO_TV_CLAROTV_PI",
+    "TIPO_TV_SATELITAL_S",
+    "TIPO_TV_BASICOTV"
+  ],
+  "vacias_100": [
+    "VAL_PENETRACION_NODO",
+    "VAL_CHURN_ZONA"
+  ],
+  "diccionario": {
+    "solo_diccionario": 137,
+    "ambos": 85,
+    "solo_dataset": 44
+  },
+  "sospecha_fuga_churn": [
+    "ESTADO_FUENTE_C",
+    "ESTADO_FUENTE_A"
+  ],
+  "sospecha_fuga_intencion": [
+    "BAN_REINCIDENTE_30"
+  ],
+  "consistencia": [
+    {
+      "id": "fuga_estado_fuente",
+      "hallazgo": "ESTADO_FUENTE_C es idéntica a BAN_CHURN (estado de la cuenta después de la baja)",
+      "evidencia": {
+        "0": {
+          "0": 19896,
+          "1": 0
+        },
+        "1": {
+          "0": 0,
+          "1": 104
+        }
+      },
+      "decision": "Excluir ESTADO_FUENTE_* de los modelos"
+    },
+    {
+      "id": "fuga_reincidencia",
+      "hallazgo": "El 100% de los reincidentes a 30 días tiene intención = 1: son un subconjunto del target",
+      "evidencia": {
+        "(0, 0)": {
+          "0": 13992,
+          "1": 161
+        },
+        "(0, 1)": {
+          "0": 2027,
+          "1": 0
+        },
+        "(1, 1)": {
+          "0": 0,
+          "1": 3820
+        }
+      },
+      "decision": "No usar reincidencias ni CANTIDAD_INTENCIONES para predecir intención"
+    },
+    {
+      "id": "incoherencia_motivo_cancela",
+      "hallazgo": "MOTIVO_LLAM_CANCELA = 1 en 2220 clientes, pero solo 132 tienen intención = 1",
+      "evidencia": {
+        "0": {
+          "0": 13931,
+          "1": 3849
+        },
+        "1": {
+          "0": 2088,
+          "1": 132
+        }
+      },
+      "decision": "Documentar; se trata como variable de contacto, no como etiqueta"
+    },
+    {
+      "id": "definicion_cantidad_intenciones",
+      "hallazgo": "CANTIDAD_INTENCIONES > 0 en 19327 clientes vs 3981 con intención en el mes",
+      "evidencia": {},
+      "decision": "Supuesto: BAN_INTENCION es del mes; CANTIDAD_INTENCIONES es histórica"
+    },
+    {
+      "id": "escala_score",
+      "hallazgo": "VAL_SCORE_CREDITICIO va de 400 a 124.377.815: el separador decimal se perdió",
+      "evidencia": {
+        "n_mayor_1e6": 18573,
+        "n_menor_1000": 130
+      },
+      "decision": "Reescalar a 0–1000 (SCORE_CREDITICIO_FIX)"
+    },
+    {
+      "id": "rango_val_downtime",
+      "hallazgo": "VAL_DOWNTIME tiene 8 valores negativos (mínimo -1.060)",
+      "evidencia": {},
+      "decision": "negativos a nulo"
+    },
+    {
+      "id": "rango_val_dias_pago",
+      "hallazgo": "VAL_DIAS_PAGO tiene 1.272 valores negativos (mínimo -1.158)",
+      "evidencia": {},
+      "decision": "recorte p1–p99"
+    },
+    {
+      "id": "rango_val_saldo_actual",
+      "hallazgo": "VAL_SALDO_ACTUAL tiene 3.273 valores negativos (mínimo -2.887.532)",
+      "evidencia": {},
+      "decision": "recorte p1–p99"
+    },
+    {
+      "id": "fuga_saldo_churn",
+      "hallazgo": "VAL_SALDO_ACTUAL = 0 en 104 de 104 clientes con churn, vs 33% con saldo en el resto",
+      "evidencia": {},
+      "decision": "La cuenta se liquida al cancelar: se excluye del modelo de churn"
+    },
+    {
+      "id": "fuga_plan_tv_i",
+      "hallazgo": "TIPO_TV_DIGITAL_PI/BI = 1 en 103 clientes, todos con cuenta no activa (ESTADO_FUENTE_A = 0 en 103 de 103); son 103 de las 159 cuentas no activas y 66 de las 104 bajas",
+      "evidencia": {},
+      "decision": "El sufijo I codifica el estado de la cuenta: se excluye de ambos modelos (validar con Claro)"
+    },
+    {
+      "id": "periodo_unico",
+      "hallazgo": "PERIODO único = [202508]",
+      "evidencia": {},
+      "decision": "Sin validación temporal posible; se reporta como limitación"
+    }
+  ],
+  "llamadas": [
+    {
+      "id": "llamadas_por_cluster",
+      "hallazgo": {
+        "1": 35,
+        "2": 20,
+        "3": 309,
+        "6": 84,
+        "7": 52
+      }
+    },
+    {
+      "id": "largo_caracteres",
+      "hallazgo": {
+        "count": 500.0,
+        "mean": 6991.0,
+        "std": 4156.0,
+        "min": 81.0,
+        "25%": 4080.0,
+        "50%": 6280.0,
+        "75%": 9534.0,
+        "max": 21688.0
+      }
+    },
+    {
+      "id": "roles_invertidos",
+      "hallazgo": "133 llamadas con guion del agente en turnos CLIENT"
+    },
+    {
+      "id": "pii_residual",
+      "hallazgo": "32 llamadas con posibles nombres sin anonimizar"
+    },
+    {
+      "id": "llamadas_cortas",
+      "hallazgo": "19 llamadas con menos de 1.000 caracteres"
+    },
+    {
+      "id": "sin_llave",
+      "hallazgo": "Las llamadas no tienen CUENTA ni DOCUMENTO: no se pueden unir individualmente al dataset"
+    }
+  ]
+}

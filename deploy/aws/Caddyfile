@@ -1,0 +1,9 @@
+# HTTPS automático (Let's Encrypt) y usuario/clave para los evaluadores.
+# Hash de la clave: docker run --rm caddy:2 caddy hash-password --plaintext 'la-clave'
+{$APP_DOMAIN} {
+	encode gzip
+	basic_auth {
+		{$APP_USER} {$APP_PASSWORD_HASH}
+	}
+	reverse_proxy app:8501
+}

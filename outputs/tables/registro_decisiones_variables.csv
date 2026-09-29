@@ -1,0 +1,131 @@
+variable,decision,motivo
+BAN_DESPOSICIONADO_COMERCIAL,eliminar,Constante en los 20.000 registros
+BAN_DESPOSICIONADO_COMPETENCIA,eliminar,Constante en los 20.000 registros
+BAN_DESPOSICIONADO_NODO,eliminar,Constante en los 20.000 registros
+BAN_DESPOSICIONADO_TENOLOGICO,eliminar,Constante en los 20.000 registros
+BAN_MIGRACION_ZONA,eliminar,Constante en los 20.000 registros
+BAN_SUSPENCION_COBRANZA,eliminar,Constante en los 20.000 registros
+TIPO_TV_BASICOTV,eliminar,Constante en los 20.000 registros
+TIPO_TV_CLAROTV_B,eliminar,Constante en los 20.000 registros
+TIPO_TV_CLAROTV_PI,eliminar,Constante en los 20.000 registros
+TIPO_TV_SATELITAL_S,eliminar,Constante en los 20.000 registros
+VAL_CHURN_ZONA,eliminar,100 % nula
+VAL_LLAMADAS_MES_CALLCENTER,eliminar,Constante en los 20.000 registros
+VAL_PENETRACION_NODO,eliminar,100 % nula
+VAL_SCORE_CREDITICIO,eliminar,Escala rota; reemplazada por SCORE_CREDITICIO_FIX (0–1000)
+VAL_SS_BCART,eliminar,Constante en los 20.000 registros
+BAN_CAMPANA_ACTIVA,excluir_modelo,Posterior al evento: reacción de retención a la intención
+BAN_CAMPANA_CORRECTIVA,excluir_modelo,Posterior al evento: reacción de retención a la intención
+BAN_CAMPANA_RETENCION,excluir_modelo,Posterior al evento: reacción de retención a la intención
+BAN_REINCIDENTE_30,excluir_modelo,Fuga: derivada de la intención de cancelación
+BAN_REINCIDENTE_60,excluir_modelo,Fuga: derivada de la intención de cancelación
+BAN_RETENCION_ACTIVA,excluir_modelo,Posterior al evento: reacción de retención a la intención
+CANTIDAD_INTENCIONES,excluir_modelo,Fuga: derivada de la intención de cancelación
+CLUSTER_ID,excluir_modelo,Identificador o periodo único
+ESTADO_FUENTE_A,excluir_modelo,Fuga: estado de la cuenta después de la baja (ESTADO_FUENTE_C = BAN_CHURN)
+ESTADO_FUENTE_C,excluir_modelo,Fuga: estado de la cuenta después de la baja (ESTADO_FUENTE_C = BAN_CHURN)
+ESTADO_FUENTE_MAS,excluir_modelo,Fuga: estado de la cuenta después de la baja (ESTADO_FUENTE_C = BAN_CHURN)
+ESTADO_FUENTE_MENOS,excluir_modelo,Fuga: estado de la cuenta después de la baja (ESTADO_FUENTE_C = BAN_CHURN)
+MOTIVO_LLAM_CANCELA,excluir_modelo,Fuga: derivada de la intención de cancelación
+PERIODO,excluir_modelo,Identificador o periodo único
+TIPO_TV_DIGITAL_BI,excluir_modelo,Fuga: el sufijo I del plan de TV solo aparece en cuentas no activas (ESTADO_FUENTE_A = 0 en el 100 %)
+TIPO_TV_DIGITAL_PI,excluir_modelo,Fuga: el sufijo I del plan de TV solo aparece en cuentas no activas (ESTADO_FUENTE_A = 0 en el 100 %)
+VAL_CAMPANA,excluir_modelo,Posterior al evento: reacción de retención a la intención
+VAL_CAMPANA_RETENCION_36M,excluir_modelo,Posterior al evento: reacción de retención a la intención
+VAL_OFER_ANTERIORES,excluir_modelo,Posterior al evento: reacción de retención a la intención
+BAN_CHURN,target,Variable objetivo
+BAN_INTENCION_CANCELACION,target,Variable objetivo
+ESTRATO,transformar,'NR' (6 registros) a nulo; numérico
+VAL_DIAS_PAGO,transformar,Recorte p1–p99 (-24 a 28)
+VAL_DOWNTIME,transformar,8 valores negativos a nulo
+VAL_SALDO_ACTUAL,transformar,Recorte p1–p99 (-95.363 a 143.038); excluida del modelo de churn: vale 0 en los 104 clientes que se fueron (cuenta liquidada)
+ANTIGUEDAD_MESES,usar,Sin hallazgos de calidad
+BAN_CAMPANA_VENTA,usar,Sin hallazgos de calidad
+BAN_CAZA_OFERTA,usar,Sin hallazgos de calidad
+BAN_COMPRA_SRV,usar,Sin hallazgos de calidad
+BAN_DECO_ADI,usar,Sin hallazgos de calidad
+BAN_DISNEY,usar,Sin hallazgos de calidad
+BAN_HBO,usar,Sin hallazgos de calidad
+BAN_INTERNET,usar,Sin hallazgos de calidad
+BAN_MORA_30,usar,Sin hallazgos de calidad
+BAN_MULTI_HOGAR,usar,Sin hallazgos de calidad
+BAN_MULTI_PETS,usar,Sin hallazgos de calidad
+BAN_NETFLIX,usar,Sin hallazgos de calidad
+BAN_OT_CERRADAS_DX,usar,Sin hallazgos de calidad
+BAN_PRIME,usar,Sin hallazgos de calidad
+BAN_TRASLADO,usar,Sin hallazgos de calidad
+BAN_TRES_MULTI,usar,Sin hallazgos de calidad
+BAN_TV,usar,Sin hallazgos de calidad
+BAN_T_RES_SALUD,usar,Sin hallazgos de calidad
+BAN_VOZ,usar,Sin hallazgos de calidad
+BAN_WIN,usar,Sin hallazgos de calidad
+CANT_SRV_ADIC,usar,Sin hallazgos de calidad
+CANT_SRV_BSC,usar,Sin hallazgos de calidad
+CLASIF_OKK_ALTACOMP,usar,Sin hallazgos de calidad
+CLASIF_OKK_IGUALCONDICION,usar,Sin hallazgos de calidad
+CLASIF_OKK_MEJORCOMP,usar,Sin hallazgos de calidad
+CLASIF_OKK_SOMOSMEJORES,usar,Sin hallazgos de calidad
+CLASIF_OKK_SOMOSUNICOS,usar,Sin hallazgos de calidad
+CONVERGENTE_CEDULA_SI,usar,Sin hallazgos de calidad
+ESTRATO_1,usar,Sin hallazgos de calidad
+ESTRATO_2,usar,Sin hallazgos de calidad
+ESTRATO_3,usar,Sin hallazgos de calidad
+ESTRATO_4,usar,Sin hallazgos de calidad
+ESTRATO_5,usar,Sin hallazgos de calidad
+ESTRATO_6,usar,Sin hallazgos de calidad
+ESTRATO_OTRO_NA,usar,Sin hallazgos de calidad
+MOTIVO_LLAM_INFO_GRAL,usar,Sin hallazgos de calidad
+MOTIVO_LLAM_NOV_ADMIN,usar,Sin hallazgos de calidad
+MOTIVO_LLAM_NOV_TEC,usar,Sin hallazgos de calidad
+MOTIVO_LLAM_OTRO,usar,Sin hallazgos de calidad
+MOTIVO_LLAM_SOPORTE_TEC,usar,Sin hallazgos de calidad
+SCORE_CREDITICIO_FIX,usar,Score reescalado a 0–1000
+SEGMENTO_PY,usar,Sin hallazgos de calidad
+SEGMENTO_RE,usar,Sin hallazgos de calidad
+TIPO_CLIENTE_NUEVO,usar,Sin hallazgos de calidad
+TIPO_RED_BI,usar,Sin hallazgos de calidad
+TIPO_RED_DTH,usar,Sin hallazgos de calidad
+TIPO_RED_FTT,usar,Sin hallazgos de calidad
+TIPO_RED_OTRO,usar,Sin hallazgos de calidad
+TIPO_TV_DIGITAL_A,usar,Sin hallazgos de calidad
+TIPO_TV_DIGITAL_B,usar,Sin hallazgos de calidad
+TIPO_TV_DIGITAL_NA,usar,Sin hallazgos de calidad
+TIPO_TV_DIGITAL_P,usar,Sin hallazgos de calidad
+TIPO_TV_DIGITAL_S,usar,Sin hallazgos de calidad
+TIPO_TV_SATELITAL_A,usar,Sin hallazgos de calidad
+TIPO_TV_SATELITAL_B,usar,Sin hallazgos de calidad
+VAL_DECO_BAS,usar,Sin hallazgos de calidad
+VAL_DENSIDAD_ZONA,usar,Sin hallazgos de calidad
+VAL_EQUIP_ADIC,usar,Sin hallazgos de calidad
+VAL_EQUIP_BAS,usar,Sin hallazgos de calidad
+VAL_FRECUENCIA_COMPRA,usar,Sin hallazgos de calidad
+VAL_LLAM_ADTIVAS_NEGATIVAS,usar,Sin hallazgos de calidad
+VAL_LLAM_ADTIVAS_NEUTRAS,usar,Sin hallazgos de calidad
+VAL_LLAM_TEC_NEGATIVAS,usar,Sin hallazgos de calidad
+VAL_LLAM_TEC_NEUTRAS,usar,Sin hallazgos de calidad
+VAL_MODEM_BAS,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_4G,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_5G,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_EMPRESARIAL,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_MASIVO,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_POSTPAGO,usar,Sin hallazgos de calidad
+VAL_NUM_LINEAS_PREPAGO,usar,Sin hallazgos de calidad
+VAL_RECLAMOS_MES,usar,Sin hallazgos de calidad
+VAL_RENTA_ACTUAL,usar,Sin hallazgos de calidad
+VAL_RENTA_ADIC_IVA,usar,Sin hallazgos de calidad
+VAL_RENTA_BSC_IVA,usar,Sin hallazgos de calidad
+VAL_RENTA_M6,usar,Sin hallazgos de calidad
+VAL_SRV_BSC,usar,Sin hallazgos de calidad
+VAL_SUM_BAN_5G,usar,Sin hallazgos de calidad
+VAL_SUM_BAN_DUAL_SIM,usar,Sin hallazgos de calidad
+VAL_SUM_BAN_ROAMING,usar,Sin hallazgos de calidad
+VAL_SUM_BAN_TECNICO_30,usar,Sin hallazgos de calidad
+VAL_SUM_VAL_DATOS_MOVIL_MB,usar,Sin hallazgos de calidad
+VAL_SUM_VAL_MINUTOS_VOZ,usar,Sin hallazgos de calidad
+VAL_SUM_VAL_SMS_ENVIADOS,usar,Sin hallazgos de calidad
+VAL_SUM_VAL_USO_CAT_APPS_PREFERIDAS,usar,Sin hallazgos de calidad
+VAL_SUM_VAL_USO_REDES_SOCIALES,usar,Sin hallazgos de calidad
+VAL_TICKETS_MES,usar,Sin hallazgos de calidad
+VAL_UW,usar,Sin hallazgos de calidad
+VAL_VAR_RENTA,usar,Sin hallazgos de calidad
+VELOCIDAD_INTERNET_MBPS,usar,Sin hallazgos de calidad

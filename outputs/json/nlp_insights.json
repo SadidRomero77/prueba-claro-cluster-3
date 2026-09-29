@@ -1,0 +1,129 @@
+{
+  "llamadas_validas": 481,
+  "llamadas_c3": 301,
+  "motivos_c3_pct": {
+    "precio_facturacion": 46.2,
+    "otro": 19.9,
+    "falla_tecnica": 15.0,
+    "traslado_cobertura": 6.6,
+    "atencion_servicio": 6.0,
+    "competencia": 3.7,
+    "servicios_no_usados": 2.0,
+    "situacion_economica": 0.7
+  },
+  "motivos_otros_pct": {
+    "precio_facturacion": 38.9,
+    "otro": 29.4,
+    "falla_tecnica": 7.2,
+    "traslado_cobertura": 8.3,
+    "atencion_servicio": 10.0,
+    "competencia": 2.8,
+    "servicios_no_usados": 2.8,
+    "situacion_economica": 0.6
+  },
+  "urgencia_c3_pct": {
+    "media": 62.8,
+    "alta": 31.9,
+    "baja": 5.3
+  },
+  "resultado_c3_pct": {
+    "no_determinado": 95.3,
+    "retenido": 2.3,
+    "no_retenido": 2.3
+  },
+  "sentimiento_c3": {
+    "inicio": -0.073,
+    "fin": -0.018,
+    "empeora_pct": 21.6
+  },
+  "competidores_c3": {
+    "tigo": 34
+  },
+  "reincidencia_c3_pct": 18.9,
+  "oferta_ofrecida_c3_pct": 56.5,
+  "metodo_final": "baseline_reglas",
+  "preprocesamiento": {
+    "roles_corregidos": 158,
+    "pii_reemplazos": 81,
+    "llamadas_con_pii_reemplazada": 74,
+    "sin_contenido": 19,
+    "diarizacion_fallida": 78
+  },
+  "benchmark": [
+    {
+      "estado": "Sin etiquetas humanas todavía: completa data/labels/muestra_etiquetada.csv"
+    }
+  ],
+  "puente": [
+    {
+      "motivo_llamadas": "precio_facturacion",
+      "pct_llamadas_c3": 46.2,
+      "variable_dataset": "Renta subió más de 5 % vs hace 6 meses",
+      "pct_clientes_c3": 25.9,
+      "intencion_con_senal_pct": 14.3,
+      "intencion_sin_senal_pct": 21.9,
+      "churn_con_senal_pct": 0.87,
+      "churn_sin_senal_pct": 0.4
+    },
+    {
+      "motivo_llamadas": "servicios_no_usados",
+      "pct_llamadas_c3": 2.0,
+      "variable_dataset": "Tiene equipos adicionales",
+      "pct_clientes_c3": 3.8,
+      "intencion_con_senal_pct": 20.8,
+      "intencion_sin_senal_pct": 19.9,
+      "churn_con_senal_pct": 7.78,
+      "churn_sin_senal_pct": 0.23
+    },
+    {
+      "motivo_llamadas": "falla_tecnica",
+      "pct_llamadas_c3": 15.0,
+      "variable_dataset": "Llamadas técnicas negativas o downtime > 0",
+      "pct_clientes_c3": 16.3,
+      "intencion_con_senal_pct": 14.1,
+      "intencion_sin_senal_pct": 21.0,
+      "churn_con_senal_pct": 0.25,
+      "churn_sin_senal_pct": 0.57
+    },
+    {
+      "motivo_llamadas": "competencia",
+      "pct_llamadas_c3": 3.7,
+      "variable_dataset": "Zona de alta competencia o competencia mejor",
+      "pct_clientes_c3": 71.4,
+      "intencion_con_senal_pct": 19.9,
+      "intencion_sin_senal_pct": 19.9,
+      "churn_con_senal_pct": 0.56,
+      "churn_sin_senal_pct": 0.42
+    },
+    {
+      "motivo_llamadas": "traslado_cobertura",
+      "pct_llamadas_c3": 6.6,
+      "variable_dataset": "Tiene marca de traslado",
+      "pct_clientes_c3": 1.1,
+      "intencion_con_senal_pct": 16.1,
+      "intencion_sin_senal_pct": 19.9,
+      "churn_con_senal_pct": 0.46,
+      "churn_sin_senal_pct": 0.52
+    },
+    {
+      "motivo_llamadas": "atencion_servicio",
+      "pct_llamadas_c3": 6.0,
+      "variable_dataset": "2 o más reclamos en el mes",
+      "pct_clientes_c3": 22.3,
+      "intencion_con_senal_pct": 11.7,
+      "intencion_sin_senal_pct": 22.3,
+      "churn_con_senal_pct": 1.25,
+      "churn_sin_senal_pct": 0.31
+    },
+    {
+      "motivo_llamadas": "situacion_economica",
+      "pct_llamadas_c3": 0.7,
+      "variable_dataset": "Score crediticio en el quintil más bajo",
+      "pct_clientes_c3": 19.8,
+      "intencion_con_senal_pct": 32.7,
+      "intencion_sin_senal_pct": 16.7,
+      "churn_con_senal_pct": 0.53,
+      "churn_sin_senal_pct": 0.52
+    }
+  ]
+}

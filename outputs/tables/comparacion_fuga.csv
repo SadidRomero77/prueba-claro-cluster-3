@@ -1,0 +1,5 @@
+modelo,variables,n_variables,auc,pr_auc,lift_10
+intencion,con fuga,111,1.0,1.0,5.02
+intencion,sin fuga (modelo final),94,0.814,0.625,3.72
+churn,con fuga,112,1.0,1.0,10.0
+churn,sin fuga (modelo final),98,0.972,0.621,8.94

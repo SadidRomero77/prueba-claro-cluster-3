@@ -1,0 +1,152 @@
+{
+  "supuestos_umbral": {
+    "meses_vida_extra": 12,
+    "tasa_exito": 0.3,
+    "costo_contacto_cop": 15000
+  },
+  "intencion": {
+    "target": "BAN_INTENCION_CANCELACION",
+    "n_variables": 94,
+    "positivos": 3981,
+    "tasa_base": 0.19905,
+    "auc_cv_media": 0.8131333100147197,
+    "auc_cv_sd": 0.008684581861487545,
+    "auc_oof_ic95": [
+      0.806010641985961,
+      0.8210026478752189
+    ],
+    "pr_auc": 0.6245173643438304,
+    "lift_5": 4.566691785983421,
+    "lift_10": 3.720170811353931,
+    "lift_20": 2.7304697312233106,
+    "brier_calibrado": 0.09952959173565293,
+    "matriz_top10": {
+      "umbral": 0.7318871413602763,
+      "VP": 1481,
+      "FP": 519,
+      "FN": 2500,
+      "VN": 15500,
+      "precision": 0.7405,
+      "recall": 0.3720170811353931
+    },
+    "matriz_umbral_negocio": {
+      "umbral": 0.351841451192479,
+      "VP": 3333,
+      "FP": 6667,
+      "FN": 648,
+      "VN": 9352,
+      "precision": 0.3333,
+      "recall": 0.8372268274302939,
+      "valor_esperado_cop": 976904507.9999998
+    },
+    "top_variables": [
+      "VAL_LLAM_ADTIVAS_NEUTRAS",
+      "BAN_CAMPANA_VENTA",
+      "VAL_VAR_RENTA",
+      "SCORE_CREDITICIO_FIX",
+      "BAN_CAZA_OFERTA",
+      "VAL_FRECUENCIA_COMPRA",
+      "VAL_RECLAMOS_MES",
+      "ANTIGUEDAD_MESES",
+      "TIPO_TV_DIGITAL_P",
+      "VAL_RENTA_BSC_IVA"
+    ],
+    "notas": [
+      "Sin reincidencias, conteo de intenciones ni reacciones de retención"
+    ]
+  },
+  "churn": {
+    "target": "BAN_CHURN",
+    "n_variables": 98,
+    "positivos": 104,
+    "tasa_base": 0.0052,
+    "auc_cv_media": 0.9696606763256959,
+    "auc_cv_sd": 0.015995537035114152,
+    "auc_oof_ic95": [
+      0.9596407925005347,
+      0.9834725223570132
+    ],
+    "pr_auc": 0.5957336289714938,
+    "lift_5": 17.115384615384617,
+    "lift_10": 8.942307692307693,
+    "lift_20": 4.903846153846154,
+    "brier_calibrado": 0.00115393792954564,
+    "matriz_top10": {
+      "umbral": 0.03608168381624838,
+      "VP": 93,
+      "FP": 1907,
+      "FN": 11,
+      "VN": 17989,
+      "precision": 0.0465,
+      "recall": 0.8942307692307693
+    },
+    "matriz_umbral_negocio": {
+      "umbral": 0.5017106561997822,
+      "VP": 73,
+      "FP": 195,
+      "FN": 31,
+      "VN": 19701,
+      "precision": 0.27238805970149255,
+      "recall": 0.7019230769230769,
+      "valor_esperado_cop": 25545817.2
+    },
+    "top_variables": [
+      "VAL_RECLAMOS_MES",
+      "VELOCIDAD_INTERNET_MBPS",
+      "BAN_INTENCION_CANCELACION",
+      "VAL_RENTA_ACTUAL",
+      "CANTIDAD_INTENCIONES",
+      "VAL_RENTA_BSC_IVA",
+      "VAL_SUM_VAL_MINUTOS_VOZ",
+      "VAL_LLAM_ADTIVAS_NEGATIVAS",
+      "VAL_EQUIP_ADIC",
+      "BAN_REINCIDENTE_60"
+    ],
+    "notas": [
+      "Incluye señales de intención (anteceden a la baja); excluye ESTADO_FUENTE_*, planes de TV con sufijo I, VAL_SALDO_ACTUAL y post-evento"
+    ]
+  },
+  "sensibilidad_churn_sin_equipos": {
+    "sin": [
+      "VAL_UW",
+      "VAL_EQUIP_ADIC"
+    ],
+    "auc": 0.963848006893814,
+    "pr_auc": 0.46371443042147786,
+    "lift_10": 9.038461538461538
+  },
+  "comparacion_fuga": [
+    {
+      "modelo": "intencion",
+      "variables": "con fuga",
+      "n_variables": 111,
+      "auc": 1.0,
+      "pr_auc": 1.0,
+      "lift_10": 5.02
+    },
+    {
+      "modelo": "intencion",
+      "variables": "sin fuga (modelo final)",
+      "n_variables": 94,
+      "auc": 0.814,
+      "pr_auc": 0.625,
+      "lift_10": 3.72
+    },
+    {
+      "modelo": "churn",
+      "variables": "con fuga",
+      "n_variables": 112,
+      "auc": 1.0,
+      "pr_auc": 1.0,
+      "lift_10": 10.0
+    },
+    {
+      "modelo": "churn",
+      "variables": "sin fuga (modelo final)",
+      "n_variables": 98,
+      "auc": 0.972,
+      "pr_auc": 0.621,
+      "lift_10": 8.94
+    }
+  ]
+}

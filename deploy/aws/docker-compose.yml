@@ -1,0 +1,37 @@
+# EC2: app + Caddy (HTTPS automático). Ejecutar desde deploy/aws/:
+#   docker compose up -d --build
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    volumes:
+      # Artefactos del pipeline (sin data/raw). Solo outputs es escribible: ahí quedan las listas aprobadas.
+      - ../../outputs:/app/outputs
+      - ../../models:/app/models:ro
+      - ../../data/processed:/app/data/processed:ro
+      - ../../data/labels:/app/data/labels:ro
+    expose:
+      - "8501"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN:-localhost}
+      - APP_USER=${APP_USER:-claro}
+      - APP_PASSWORD_HASH=${APP_PASSWORD_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

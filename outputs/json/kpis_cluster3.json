@@ -1,0 +1,22 @@
+{
+  "clientes": 20000,
+  "churn_n": 104,
+  "churn_tasa": 0.0052,
+  "intencion_n": 3981,
+  "intencion_tasa": 0.19905,
+  "reincidentes_3mas": 2845,
+  "arpu_mediano": 94841.0,
+  "arpu_medio": 96446.78235,
+  "renta_mensual_total": 1928935647.0,
+  "renta_mensual_churn": 11491663.0,
+  "renta_mensual_intencion": 376286093.0,
+  "churn_si_intencion": 0.013062044712383824,
+  "churn_no_intencion": 0.003246145202571946,
+  "antiguedad_mediana_meses": 62.0,
+  "pct_convergente": 0.59165,
+  "pct_fibra": 0.2566,
+  "pct_estrato_2_3": 0.79645,
+  "pct_tv": 0.9778,
+  "pct_internet": 0.9975,
+  "pct_voz": 0.96945
+}

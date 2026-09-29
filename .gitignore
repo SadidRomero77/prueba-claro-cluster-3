@@ -1,0 +1,32 @@
+# --- Datos internos de Claro: nunca al repositorio ---
+data/raw/*
+data/interim/*
+data/processed/*
+# Insumos originales copiados a data/ (Excel y enunciado de la prueba)
+data/*.xlsx
+data/*.docx
+data/*.pdf
+!data/**/.gitkeep
+# Listas de contacto aprobadas por HITL (ids de clientes)
+outputs/listas/
+# Análisis por llamada (texto de evidencia a nivel de llamada)
+outputs/json/llamadas_*.jsonl
+# Modelos entrenados
+models/*.pkl
+
+# --- Seguimiento de experimentos ---
+mlruns/
+mlflow.db
+
+# --- Entorno ---
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.databricks/
+.streamlit/secrets.toml
+*.zip
+.DS_Store

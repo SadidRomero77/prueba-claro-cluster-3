@@ -1,0 +1,20 @@
+# Databricks Apps · app de sustentación (Streamlit + sistema multiagente)
+# Los artefactos los produce el job `cluster3_pipeline` en el Volume indicado en CLUSTER3_VOLUME.
+command:
+  - streamlit
+  - run
+  - src/cluster3/app/streamlit_app.py
+  - --server.headless=true
+
+env:
+  - name: CLUSTER3_VOLUME
+    value: /Volumes/workspace/cluster3/artefactos
+  - name: CLUSTER3_ROOT
+    value: /tmp/cluster3
+  # LLM servido por Databricks (Foundation Model APIs). Cambia el endpoint por uno disponible en Serving.
+  - name: LLM_PROVIDER
+    value: databricks
+  - name: LLM_MODEL
+    value: databricks-meta-llama-3-3-70b-instruct
+  - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+    value: "false"

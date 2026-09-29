@@ -1,0 +1,59 @@
+# Databricks Asset Bundle · Cluster 3
+#   databricks bundle validate
+#   databricks bundle deploy -t dev
+#   databricks bundle run cluster3_pipeline -t dev
+#   databricks bundle run cluster3_app -t dev
+bundle:
+  name: claro-cluster3
+
+variables:
+  catalog:
+    description: Catálogo de Unity Catalog (Free Edition trae `workspace`)
+    default: workspace
+  schema:
+    default: cluster3
+
+resources:
+  schemas:
+    cluster3:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: Prueba técnica Claro · Cluster 3 (datos internos, eliminar al cerrar el proceso)
+
+  volumes:
+    raw:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.cluster3.name}
+      name: raw
+      comment: Excel originales (Clientes, Llamadas, Diccionario). Se suben a mano.
+    artefactos:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.cluster3.name}
+      name: artefactos
+      comment: outputs/, models/, data/processed/ que consume la app
+
+  jobs:
+    cluster3_pipeline:
+      name: cluster3_pipeline
+      tasks:
+        - task_key: pipeline
+          notebook_task:
+            notebook_path: ./notebooks/databricks/pipeline_job.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              usar_llm: "false"
+              usar_jev: "false"
+      # Sin `schedule`: se ejecuta a demanda. Para producción: semanal (lunes 6 a. m.).
+
+  apps:
+    cluster3_app:
+      name: cluster3-churn
+      description: Dashboard + chat con el sistema multiagente del Cluster 3
+      source_code_path: .
+
+targets:
+  dev:
+    mode: development
+    default: true

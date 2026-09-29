@@ -1,0 +1,46 @@
+segmento,nivel,clientes,churn_pct,intencion_pct,arpu_mediano
+Variación de renta vs 6 meses,< -30 %,1812,0.22,30.7,75030.0
+Variación de renta vs 6 meses,-30 a -5 %,6908,0.3,22.3,89900.0
+Variación de renta vs 6 meses,±5 %,6102,0.56,18.8,95091.0
+Variación de renta vs 6 meses,5 a 30 %,4098,0.88,13.5,104649.0
+Variación de renta vs 6 meses,> 30 %,1080,0.83,17.2,108389.0
+Score crediticio (quintil),Q1 bajo,3957,0.53,32.7,97400.0
+Score crediticio (quintil),Q2,3957,0.58,20.6,95760.0
+Score crediticio (quintil),Q3,3957,0.61,15.1,92840.0
+Score crediticio (quintil),Q4,3957,0.53,15.4,94900.0
+Score crediticio (quintil),Q5 alto,3957,0.38,14.6,91902.0
+Downtime,0,17552,0.55,20.8,93959.0
+Downtime,1–1.000,387,1.03,14.5,99899.0
+Downtime,1.000–5.000,1411,0.0,13.7,98389.0
+Downtime,> 5.000,642,0.47,11.5,99899.0
+Llamadas técnicas negativas,0,17072,0.56,20.9,93899.0
+Llamadas técnicas negativas,2–3,2017,0.3,15.9,98899.0
+Llamadas técnicas negativas,4+,911,0.22,10.0,99999.0
+Reclamos del mes,0,12476,0.13,23.0,92211.0
+Reclamos del mes,1,3056,1.05,19.3,96154.0
+Reclamos del mes,2–3,2835,1.16,13.6,98899.0
+Reclamos del mes,4+,1633,1.41,8.5,99900.0
+Equipos adicionales,0,19241,0.23,19.9,94627.0
+Equipos adicionales,1,235,6.38,23.0,97559.0
+Equipos adicionales,2+,523,8.41,19.9,100073.0
+Cazador de ofertas,No,19033,0.55,20.3,94900.0
+Cazador de ofertas,Sí,967,0.0,11.9,86956.0
+Convergente (fijo + móvil),No,8167,0.59,19.8,93899.0
+Convergente (fijo + móvil),Sí,11833,0.47,19.9,95138.0
+Red de fibra (FTTH),No,14868,0.53,18.7,94211.0
+Red de fibra (FTTH),Sí,5132,0.49,23.5,96118.0
+Estrato,1.0,1203,0.5,21.4,89900.0
+Estrato,2.0,8390,0.36,18.8,89900.0
+Estrato,3.0,7539,0.61,19.7,97150.0
+Estrato,4.0,2439,0.78,21.3,99900.0
+Estrato,5.0,79,0.0,78.5,97719.0
+Estrato,6.0,344,0.87,22.7,110214.0
+Antigüedad,≤ 1 año,912,0.55,60.3,97249.0
+Antigüedad,1–3,5170,0.7,23.1,91401.0
+Antigüedad,3–6,5282,0.32,17.2,92232.0
+Antigüedad,6–10,3517,0.6,16.1,97149.0
+Antigüedad,> 10 años,5119,0.49,14.9,97591.0
+Competencia en la zona,Alta competencia,4314,0.53,21.2,95782.0
+Competencia en la zona,Competencia mejor,9965,0.57,19.4,94899.0
+Competencia en la zona,Igual condición,2661,0.45,19.0,93832.0
+Competencia en la zona,Somos mejores / únicos,3060,0.39,20.7,93099.0

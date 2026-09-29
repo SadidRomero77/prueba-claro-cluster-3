@@ -1,0 +1,61 @@
+[project]
+name = "cluster3"
+version = "0.1.0"
+description = "Prueba técnica Claro · Cluster Crítico (Cluster 3): calidad de datos, modelo de churn, NLP de llamadas y sistema multiagente"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "openpyxl>=3.1",
+    "pyarrow>=15",
+    "duckdb>=1.0",
+    "scikit-learn>=1.4",
+    "lightgbm>=4.3",
+    "shap>=0.45",
+    "matplotlib>=3.8",
+    "pydantic>=2.6",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Clasificación de llamadas con LLM y con Jev (TypeSafe)
+llm = [
+    "langchain-core>=0.3",
+    "langchain-anthropic>=0.3",
+    "langchain-openai>=0.3",
+    "typesafe-sdk",
+]
+# Sistema multiagente y app
+agents = [
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "langchain-anthropic>=0.3",
+    "langchain-openai>=0.3",
+    "streamlit>=1.46",
+]
+# Seguimiento de experimentos
+mlops = ["mlflow>=2.14"]
+dev = ["pytest>=8", "ruff>=0.5", "jupyter>=1.0"]
+
+[project.scripts]
+cluster3 = "cluster3.pipeline:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cluster3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]  # regex y textos de negocio largos

@@ -1,0 +1,267 @@
+variable,estado,categoria,definicion
+ANTIGUEDAD_MESES,ambos,Identificación & Demografía,"Antigüedad del cliente en la compañía, expresada en meses."
+APLICA_CAMPAÑA,solo_diccionario,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si una campaña aplica NBO / si el cliente tiene campaña activa.
+APLICA_TARIFA,solo_diccionario,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si una tarifa aplica NBO.
+AREA,solo_diccionario,Identificación & Demografía,Área geográfica de instalación del servicio fijo.
+BAN_5G,solo_diccionario,Servicio Móvil,Marca/conteo de uso de red 5G.
+BAN_CAMPANA_ACTIVA,ambos,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si una campaña aplica NBO / si el cliente tiene campaña activa.
+BAN_CAMPANA_CORRECTIVA,ambos,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si la campaña fue correctiva.
+BAN_CAMPANA_RETENCION,ambos,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si el cliente cuenta con campaña activa de retención.
+BAN_CAMPANA_VENTA,ambos,Campañas & Retención (NBO/NBA),Marca (1/0) que indica si la campaña fue de venta.
+BAN_CAZA_OFERTA,solo_dataset,Campañas & Retención (NBO/NBA),
+BAN_CAZA_OFERTA(S),solo_diccionario,Campañas & Retención (NBO/NBA),"Marca (1/0) del cliente que, al vencérsele una campaña, llama a cancelar para renovar el descuento; conducta reiterada en su ciclo de vida."
+BAN_CHURN,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente dio de baja uno o más servicios básicos (cancelación efectiva).
+BAN_COMPRA_PROD,solo_diccionario,Scores & Modelos Analíticos,Marca (1/0): realizó compra de producto de tecnología/terminal pagado en la factura del hogar.
+BAN_COMPRA_SRV,ambos,Scores & Modelos Analíticos,Marca (1/0): realizó compra de un servicio básico o adicional.
+BAN_COMPRA_TYT,solo_diccionario,Scores & Modelos Analíticos,Marca (1/0): realizó alguna compra de Terminales y Tecnología (TyT).
+BAN_CONVERGENCIA,solo_diccionario,Identificación & Demografía,Marca (1/0) que identifica al cliente convergente (posee fijo y móvil).
+BAN_DECO_ADI,ambos,Equipos & Dispositivos (Hogar),Marca (1/0) que indica si hay decodificadores adicionales.
+BAN_DESPOSICIONADO_COMERCIAL,ambos,"Zona, Nodo & Calidad de Red",Marca (1/0): el cliente está desposicionado comercialmente frente a la oferta vigente de Claro en su zona.
+BAN_DESPOSICIONADO_COMPETENCIA,ambos,"Zona, Nodo & Calidad de Red",Marca (1/0): el cliente está en una zona donde la competencia ofrece más megas o menor precio.
+BAN_DESPOSICIONADO_INTERNO,solo_diccionario,"Zona, Nodo & Calidad de Red",Marca (1/0) de desposicionamiento interno.
+BAN_DESPOSICIONADO_NODO,ambos,"Zona, Nodo & Calidad de Red",Marca (1/0): el cliente está en un nodo con afectación que requiere visita técnica para normalizarse.
+BAN_DESPOSICIONADO_TENOLOGICO,ambos,"Zona, Nodo & Calidad de Red","Marca (1/0): el equipo no es apto para la velocidad, es obsoleto o presenta fallas de señal."
+BAN_DISNEY,ambos,Servicios & Productos,Marca (1/0) de servicio Disney+ activo.
+BAN_DISPOSITIVO_AVANZADO,solo_diccionario,Servicio Móvil,"Marca (1/0): el cliente usa dispositivos premium (p. ej. iPhone, Galaxy S)."
+BAN_DUAL_SIM,solo_diccionario,Servicio Móvil,Marca/conteo de uso de doble SIM en el móvil.
+BAN_HBO,ambos,Servicios & Productos,Marca (1/0) de servicio HBO/Max activo.
+BAN_INTENCION,solo_diccionario,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente hizo una llamada de cancelación (entre 30 y 60 días).
+BAN_INTENCION_CANCELACION,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente hizo una llamada de cancelación (entre 30 y 60 días).
+BAN_INTERNET,ambos,Servicios & Productos,Marca (1/0) que indica si el servicio de internet está activo.
+BAN_MIGRACION_ZONA,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente se mudó recientemente.
+BAN_MORA_30,ambos,Facturación & Cartera,Marca (1/0) de altura de cartera en mora a 30 días.
+BAN_MORA_60,solo_diccionario,Facturación & Cartera,Marca (1/0) de altura de cartera en mora a 60 días.
+BAN_MORA_90,solo_diccionario,Facturación & Cartera,Marca (1/0) de altura de cartera en mora a 90 días.
+BAN_MULTI_HOGAR,ambos,Servicios & Productos,Marca (1/0) de servicio Multi Hogar activo.
+BAN_MULTI_PETS,ambos,Servicios & Productos,Marca (1/0) de servicio Pets activo.
+BAN_NETFLIX,ambos,Servicios & Productos,Marca (1/0) de servicio Netflix activo.
+BAN_OT_CERRADAS_DX,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica una orden de trabajo activa/cerrada de desconexión.
+BAN_OT_DX,solo_diccionario,Intención de Cancelación & Churn,Marca (1/0) que indica una orden de trabajo activa/cerrada de desconexión.
+BAN_PAGO_AUTO,solo_diccionario,Facturación & Cartera,Marca (1/0) que indica si tiene pago automático configurado.
+BAN_PRIME,ambos,Servicios & Productos,Marca (1/0) de servicio Amazon Prime activo.
+BAN_REINCIDENTE_30,ambos,Intención de Cancelación & Churn,Marca (1/0) de solicitud de cancelación en los últimos 30 días.
+BAN_REINCIDENTE_60,ambos,Intención de Cancelación & Churn,Marca (1/0) de solicitud de cancelación en los últimos 60 días.
+BAN_RETENCION_ACTIVA,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente fue retenido con éxito en los últimos 12 meses.
+BAN_ROAMING,solo_diccionario,Servicio Móvil,Marca/conteo de uso de roaming internacional en los últimos 3 meses.
+BAN_SOLICITUD_CAN,solo_diccionario,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente llamó a solicitar la cancelación del servicio fijo (últimos 30 días).
+BAN_SUSPENCION_COBRANZA,ambos,Facturación & Cartera,Marca (1/0) que indica si el cliente tuvo desconexión por cobranza el mes anterior.
+BAN_TECNICO_30,solo_diccionario,"Reclamos, Llamadas & Soporte",Marca/conteo que indica si requirió visita técnica en los últimos 30 días.
+BAN_TRASLADO,ambos,Intención de Cancelación & Churn,Marca (1/0) que indica si el cliente solicitó traslado del servicio el mes anterior.
+BAN_TRES_MULTI,ambos,Servicios & Productos,Marca (1/0) de servicio Tres Multi activo.
+BAN_TV,ambos,Servicios & Productos,Marca (1/0) que indica si el servicio de televisión está activo.
+BAN_T_RES_SALUD,ambos,Servicios & Productos,Marca (1/0) de servicio de salud activo.
+BAN_VOZ,ambos,Servicios & Productos,Marca (1/0) que indica si el servicio de voz/telefonía está activo.
+BAN_WIN,ambos,Servicios & Productos,Marca (1/0) de servicio Win activo.
+C,solo_diccionario,Segmentación,Estado del cliente según la fuente de información.
+CANTIDAD_INTENCIONES,ambos,Intención de Cancelación & Churn,Número de intenciones de cancelación del cliente en el último año.
+CANT_SRV_ADIC,ambos,Servicios & Productos,Número de servicios adicionales contratados.
+CANT_SRV_BSC,ambos,Servicios & Productos,Número de productos/servicios fijos básicos activos.
+CAT_APPS_PREFERIDAS,solo_diccionario,Servicio Móvil,Apps más usadas por el cliente (p. ej. gaming).
+CAT_CAMP_EXITO,solo_diccionario,Campañas & Retención (NBO/NBA),Tipo de campaña con mejor respuesta histórica del cliente (mayor tasa de aceptación entre las campañas recibidas en los últimos 3 años).
+CAT_CLASIFICACION_OKKLA,solo_diccionario,"Zona, Nodo & Calidad de Red","Clasificación competitiva del nodo: AltaCompetencia, IgualCondicion, MejorCompetencia, SomosMejores, SomosUnicos."
+CAT_COD_CAMPANA,solo_diccionario,Campañas & Retención (NBO/NBA),Código de la campaña aplicada.
+CAT_COD_EQUIPO_DECO,solo_diccionario,Equipos & Dispositivos (Hogar),Código del decodificador instalado.
+CAT_COD_EQUIPO_MODEM,solo_diccionario,Equipos & Dispositivos (Hogar),Código del módem instalado.
+CAT_CONTENIDO_PREF,solo_diccionario,Uso & Consumo,Categorías de contenido más vistas.
+CAT_HORARIO_RESP,solo_diccionario,Campañas & Retención (NBO/NBA),Franja horaria con mejor tasa de respuesta a retenciones.
+CAT_METODO_PAGO,solo_diccionario,Facturación & Cartera,Método de pago más utilizado por el cliente.
+CAT_MOTIVO_LLAMADA,solo_diccionario,"Reclamos, Llamadas & Soporte","Categorización del motivo más frecuente de llamada (info general, cancelación, novedad administrativa/técnica, soporte, otro)."
+CAT_MOTIVO_RECLAMO,solo_diccionario,"Reclamos, Llamadas & Soporte",Motivo principal de los reclamos (base PQRS).
+CAT_NEXT_BEST,solo_diccionario,Scores & Modelos Analíticos,Próximo mejor producto/servicio según comportamiento (variable de modelo NBA).
+CAT_TIPO_DECO,solo_diccionario,Equipos & Dispositivos (Hogar),Tipo de decodificador que posee (tecnología DOCSIS).
+CAT_TIPO_TICKET,solo_diccionario,"Reclamos, Llamadas & Soporte",Categorización del tipo de ticket más frecuente.
+CICLO_FACTURACION,solo_diccionario,Facturación & Cartera,Ciclo de corte de facturación asignado al cliente.
+CIUDAD,solo_diccionario,Identificación & Demografía,Ciudad donde está instalado el servicio fijo.
+CLASIF_OKK_*,solo_diccionario,"Zona, Nodo & Calidad de Red","Clasificación competitiva del nodo: AltaCompetencia, IgualCondicion, MejorCompetencia, SomosMejores, SomosUnicos."
+CLASIF_OKK_ALTACOMP,solo_dataset,"Zona, Nodo & Calidad de Red",
+CLASIF_OKK_IGUALCONDICION,solo_dataset,"Zona, Nodo & Calidad de Red",
+CLASIF_OKK_MEJORCOMP,solo_dataset,"Zona, Nodo & Calidad de Red",
+CLASIF_OKK_SOMOSMEJORES,solo_dataset,"Zona, Nodo & Calidad de Red",
+CLASIF_OKK_SOMOSUNICOS,solo_dataset,"Zona, Nodo & Calidad de Red",
+CLUSTER_ID,ambos,Identificación & Demografía,Identificador del clúster al que pertenece el cliente en la segmentación.
+CONVERGENTE_CEDULA_SI,ambos,Identificación & Demografía,Marca (1/0) que identifica al cliente convergente (posee fijo y móvil).
+CUENTA,solo_diccionario,Identificación & Demografía,Número de cuenta del hogar asociada al cliente.
+DEPARTAMENTO,solo_diccionario,Identificación & Demografía,Departamento donde está instalado el servicio fijo.
+DESC_REGION,solo_diccionario,Identificación & Demografía,Región de instalación del servicio fijo.
+DIVISION,solo_diccionario,Identificación & Demografía,Región geográfica a la que pertenece el cliente.
+DOCUMENTO,solo_diccionario,Identificación & Demografía,Número de documento de identificación del cliente.
+DTH,solo_diccionario,Segmentación,Variables dummy del tipo de red del cliente.
+ESTADO_FUENTE_A,ambos,Segmentación,Estado del cliente según la fuente de información.
+ESTADO_FUENTE_C,solo_dataset,Intención de Cancelación & Churn,
+ESTADO_FUENTE_MAS,solo_dataset,Intención de Cancelación & Churn,
+ESTADO_FUENTE_MENOS,solo_dataset,Intención de Cancelación & Churn,
+ESTRATO,ambos,Identificación & Demografía,Estrato socioeconómico del domicilio donde se instala el servicio.
+ESTRATO_1,solo_dataset,Segmentación,
+ESTRATO_1 … ESTRATO_6,solo_diccionario,Segmentación,Variables dummy (1/0) que indican el estrato del cliente.
+ESTRATO_2,solo_dataset,Segmentación,
+ESTRATO_3,solo_dataset,Segmentación,
+ESTRATO_4,solo_dataset,Segmentación,
+ESTRATO_5,solo_dataset,Segmentación,
+ESTRATO_6,solo_dataset,Segmentación,
+ESTRATO_OTRO_NA,ambos,Segmentación,Variables dummy (1/0) que indican el estrato del cliente.
+FECHA_INS_UW,solo_diccionario,Equipos & Dispositivos (Hogar),Fecha de instalación del UltraWiFi.
+FTT,solo_diccionario,Segmentación,Variables dummy del tipo de red del cliente.
+HERRAMIENTA_RET_DIF_MODELO,solo_diccionario,Campañas & Retención (NBO/NBA),Descripción de la retención aplicada al cliente.
+MAS,solo_diccionario,Segmentación,Estado del cliente según la fuente de información.
+MENOS,solo_diccionario,Segmentación,Estado del cliente según la fuente de información.
+MODELO_ANALITO,solo_diccionario,Campañas & Retención (NBO/NBA),Modelo (NBA) asignado; determina la cobertura de las intenciones.
+MOTIVO_LLAM_*,solo_diccionario,"Reclamos, Llamadas & Soporte","Categorización del motivo más frecuente de llamada (info general, cancelación, novedad administrativa/técnica, soporte, otro)."
+MOTIVO_LLAM_CANCELA,solo_dataset,"Reclamos, Llamadas & Soporte",
+MOTIVO_LLAM_INFO_GRAL,solo_dataset,"Reclamos, Llamadas & Soporte",
+MOTIVO_LLAM_NOV_ADMIN,solo_dataset,"Reclamos, Llamadas & Soporte",
+MOTIVO_LLAM_NOV_TEC,solo_dataset,"Reclamos, Llamadas & Soporte",
+MOTIVO_LLAM_OTRO,solo_dataset,"Reclamos, Llamadas & Soporte",
+MOTIVO_LLAM_SOPORTE_TEC,solo_dataset,"Reclamos, Llamadas & Soporte",
+NODO,solo_diccionario,"Zona, Nodo & Calidad de Red",Punto de conexión dentro de la red Claro.
+OPERA,solo_diccionario,Identificación & Demografía,Distribución regional (operación) del cliente.
+OTRO,solo_diccionario,Segmentación,Variables dummy del tipo de red del cliente.
+PAQUETE,solo_diccionario,Servicios & Productos,"Servicios actualmente contratados por el cliente (internet, telefonía, televisión)."
+PERIODO,ambos,Identificación & Demografía,Periodo (mes) de corte de la información.
+RENTA,solo_diccionario,Facturación & Cartera,Cargo fijo mensual del servicio (renta actual).
+SEGMENTO_PY,ambos,Segmentación,Segmento del cliente en el frente PYMES.
+SEGMENTO_RE,ambos,Segmentación,Segmento del cliente en el frente de Retención.
+TIPO_CLIENTE_NUEVO,ambos,Identificación & Demografía,Marca (1/0) que indica si el cliente es nuevo.
+TIPO_DISPOSITIVO_MOVIL,solo_diccionario,Servicio Móvil,Marca/modelo del dispositivo móvil.
+TIPO_PLAN_MOVIL,solo_diccionario,Servicio Móvil,"Tipo de plan móvil (prepago, pospago, familiar, empresarial)."
+TIPO_RED,solo_diccionario,Servicios & Productos,"Tipo de conexión de internet del cliente (p. ej. HFC, FTTH, DTH)."
+TIPO_RED_BI,ambos,Segmentación,Variables dummy del tipo de red del cliente.
+TIPO_RED_DTH,solo_dataset,Segmentación,
+TIPO_RED_FTT,solo_dataset,Segmentación,
+TIPO_RED_OTRO,solo_dataset,Segmentación,
+TIPO_TV,solo_diccionario,Servicios & Productos,"Tipo de televisión contratada (digital, satelital, básica)."
+TIPO_TV_BASICOTV,solo_dataset,Segmentación,
+TIPO_TV_CLAROTV_B,solo_dataset,Segmentación,
+TIPO_TV_CLAROTV_PI,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_A,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_B,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_BI,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_NA,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_P,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_PI,solo_dataset,Segmentación,
+TIPO_TV_DIGITAL_S,solo_dataset,Segmentación,
+TIPO_TV_SATELITAL_A,solo_dataset,Segmentación,
+TIPO_TV_SATELITAL_B,solo_dataset,Segmentación,
+TIPO_TV_SATELITAL_S,solo_dataset,Segmentación,
+TIPO_TV_[VARIANTE],solo_diccionario,Segmentación,"Variables dummy del tipo de TV contratada (digital, satelital, Claro TV, básica, etc.)."
+VAL_ADOPCION_ZONA,solo_diccionario,"Zona, Nodo & Calidad de Red",Tasa de adopción de servicios en la zona (variable de modelo).
+VAL_ALIADO_RET,solo_diccionario,Campañas & Retención (NBO/NBA),Aliado que realizó la retención del cliente.
+VAL_ANTIGUEDAD,solo_diccionario,Identificación & Demografía,"Antigüedad del cliente en la compañía, expresada en meses."
+VAL_ANTIGUEDAD_DISPOSITIVO,solo_diccionario,Servicio Móvil,"Antigüedad del dispositivo móvil principal, en meses."
+VAL_APLICA_NBO,solo_diccionario,Campañas & Retención (NBO/NBA),Marca (1/0) que valida si la cuenta fue retenida con el modelo NBO.
+VAL_ARPU_BCART,solo_diccionario,Facturación & Cartera,Renta mensual de las cuentas dadas de baja en el mes por cartera o causas involuntarias en el nodo.
+VAL_ARPU_NODO,solo_diccionario,"Zona, Nodo & Calidad de Red",Renta total generada en el nodo.
+VAL_AUTOGEST,solo_diccionario,Uso & Consumo,Número de ingresos al portal de autogestión (Mi Claro / IVR).
+VAL_CALIDAD_RED,solo_diccionario,"Zona, Nodo & Calidad de Red",Score de calidad de red en la zona.
+VAL_CAMBIO_STREAM,solo_diccionario,Uso & Consumo,Número de cambios entre servicios de streaming por sesión.
+VAL_CAMPANA,ambos,Campañas & Retención (NBO/NBA),Número de campañas activas en el mes.
+VAL_CAMPANA_RETENCION_36M,ambos,Campañas & Retención (NBO/NBA),Total de campañas de retención recibidas en los últimos 36 meses.
+VAL_CANAL_RET,solo_diccionario,Campañas & Retención (NBO/NBA),Canal por el cual se realizó la retención.
+VAL_CANAL_SOL,solo_diccionario,Campañas & Retención (NBO/NBA),Canal por el cual se resolvieron las intenciones de cancelación.
+VAL_CHURN_ZONA,ambos,"Zona, Nodo & Calidad de Red","Tasa de churn en la zona (calculada con el score de Oracle, canal telefónico)."
+VAL_COBERTURA_MOVIL,solo_diccionario,Servicio Móvil,"Calidad de cobertura móvil en la zona, medida en dBm."
+VAL_COMPETENCIA,solo_diccionario,"Zona, Nodo & Calidad de Red",Número de competidores con cobertura en la zona.
+VAL_CONSUMO_GB_MES,solo_diccionario,Uso & Consumo,"Consumo mensual de datos del hogar, en GB."
+VAL_CONTACT_RATE_NODO,solo_diccionario,"Reclamos, Llamadas & Soporte",Total de llamadas sobre el total de servicios (UGIs) del nodo.
+VAL_DATOS_MOVIL_MB,solo_diccionario,Servicio Móvil,"Consumo de datos móviles mensual, en MB."
+VAL_DECO_ADIC,solo_diccionario,Equipos & Dispositivos (Hogar),Número de decodificadores adicionales instalados.
+VAL_DECO_BAS,ambos,Equipos & Dispositivos (Hogar),Número de decodificadores básicos instalados.
+VAL_DENSIDAD_ZONA,ambos,"Zona, Nodo & Calidad de Red",Densidad de clientes en la zona.
+VAL_DIAS_FIN_CAMPANA,solo_diccionario,Campañas & Retención (NBO/NBA),Número de días que faltan para que finalice la campaña.
+VAL_DIAS_PAGO,ambos,Facturación & Cartera,Días promedio de anticipación o retraso en el pago. Valor negativo = paga antes del vencimiento.
+VAL_DIAS_ULT_RESP,solo_diccionario,Campañas & Retención (NBO/NBA),Días transcurridos desde la última respuesta positiva a una campaña.
+VAL_DISP_SIMULT,solo_diccionario,Uso & Consumo,Número máximo de dispositivos conectados simultáneamente.
+VAL_DOWNTIME,ambos,"Zona, Nodo & Calidad de Red",Minutos de interrupción del servicio en el mes (sumatoria del tiempo de resolución de las fallas reportadas por el cliente).
+VAL_EQUIPOS,solo_diccionario,Equipos & Dispositivos (Hogar),Número total de dispositivos instalados en el hogar.
+VAL_EQUIP_ADIC,ambos,Equipos & Dispositivos (Hogar),Número de dispositivos adicionales instalados.
+VAL_EQUIP_BAS,ambos,Equipos & Dispositivos (Hogar),Número de dispositivos básicos instalados.
+VAL_FCR,solo_diccionario,"Reclamos, Llamadas & Soporte",First Call Resolution: resolución en el primer contacto (indicador de servicio).
+VAL_FRECUENCIA_COMPRA,ambos,Facturación & Cartera,Transacciones por año (upgrades y compras): número de compras del último año dividido en 12 meses.
+VAL_GAMING_HOURS,solo_diccionario,Uso & Consumo,Horas de uso en gaming.
+VAL_HHPP_NODO,solo_diccionario,"Zona, Nodo & Calidad de Red",Home Pass: cantidad de puertos disponibles para ofrecer servicio en el nodo (incluye ocupados).
+VAL_HISTORICO_GASTO,solo_diccionario,Facturación & Cartera,"Gasto acumulado en los últimos 24 meses (facturas, compras adicionales, productos)."
+VAL_HISTORICO_USO_PRODUCTO,solo_diccionario,Uso & Consumo,Uso histórico por servicio en los últimos 12 meses (identifica el servicio más usado).
+VAL_HORAS_TV,solo_diccionario,Uso & Consumo,Horas totales de visualización de TV al mes.
+VAL_INCENTIVO_EF,solo_diccionario,Campañas & Retención (NBO/NBA),Valor del incentivo que generó una respuesta positiva.
+VAL_INVERSION_CAMPANA,solo_diccionario,Campañas & Retención (NBO/NBA),Inversión monetaria asignada por campaña (área de telemercadeo).
+VAL_JITTERMEAN_CLARO,solo_diccionario,"Zona, Nodo & Calidad de Red",Jitter promedio de Claro: variación indeseada y abrupta de una señal.
+VAL_LATENCIA,solo_diccionario,"Zona, Nodo & Calidad de Red",Latencia promedio (ms): tiempo que tarda un paquete en viajar entre dos puntos.
+VAL_LATMEAN_CLARO,solo_diccionario,"Zona, Nodo & Calidad de Red",Latencia promedio (ms): tiempo que tarda un paquete en viajar entre dos puntos.
+VAL_LINEAS_MOVIL,solo_diccionario,Servicio Móvil,Número de líneas móviles asociadas al cliente.
+VAL_LLAMADAS_MES,solo_diccionario,"Reclamos, Llamadas & Soporte",Número de llamadas al call center en el mes.
+VAL_LLAMADAS_MES_CALLCENTER,ambos,"Reclamos, Llamadas & Soporte",Número de llamadas al call center en el mes.
+VAL_LLAM_ADTIVAS_NEGATIVAS,ambos,"Reclamos, Llamadas & Soporte",Número de llamadas por fallas administrativas negativas.
+VAL_LLAM_ADTIVAS_NEUTRAS,ambos,"Reclamos, Llamadas & Soporte",Número de llamadas por fallas administrativas neutras.
+VAL_LLAM_TEC_NEGATIVAS,ambos,"Reclamos, Llamadas & Soporte",Número de llamadas por fallas técnicas negativas.
+VAL_LLAM_TEC_NEUTRAS,ambos,"Reclamos, Llamadas & Soporte",Número de llamadas por fallas técnicas neutras.
+VAL_MINUTOS_VOZ,solo_diccionario,Servicio Móvil,Minutos de voz consumidos al mes.
+VAL_MODEM_BAS,ambos,Equipos & Dispositivos (Hogar),Número de módems básicos instalados.
+VAL_MOTIVO,solo_diccionario,Intención de Cancelación & Churn,Motivo por el cual el cliente intentó cancelar algún servicio de hogar.
+VAL_NPS,solo_diccionario,"Reclamos, Llamadas & Soporte","Net Promoter Score del cliente, cuando está disponible (encuesta hogar/móvil)."
+VAL_NUM_LINEAS_4G,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_5G,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_EMPRESARIAL,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_MASIVO,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_POSTPAGO,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_PREPAGO,solo_dataset,Servicio Móvil,
+VAL_NUM_LINEAS_[TIPO],solo_diccionario,Servicio Móvil,"Número de líneas por tipo (pospago, prepago, masivo, empresarial, 4G, 5G)."
+VAL_OFER_ANTERIORES,ambos,Campañas & Retención (NBO/NBA),Número de campañas recibidas en los últimos dos años.
+VAL_OFICINA_RET,solo_diccionario,Campañas & Retención (NBO/NBA),Oficina que realizó la retención.
+VAL_OPERACION_RET,solo_diccionario,Campañas & Retención (NBO/NBA),Operación donde se realizó la retención.
+VAL_PACKET_LOSS,solo_diccionario,"Zona, Nodo & Calidad de Red",Porcentaje de pérdida de paquetes.
+VAL_PEAK_HOURS,solo_diccionario,Uso & Consumo,Número de horas de uso en horario pico.
+VAL_PENETRACION_NODO,ambos,"Zona, Nodo & Calidad de Red",Porcentaje de Home Pass ocupados (hogares / HHPP).
+VAL_PROB_CHURN,solo_diccionario,Scores & Modelos Analíticos,"Probabilidad de abandono estimada por el modelo, basada en comportamiento."
+VAL_PROB_CROSS,solo_diccionario,Scores & Modelos Analíticos,Probabilidad de adopción de un nuevo servicio (cross-sell).
+VAL_PROB_UPGRADE,solo_diccionario,Scores & Modelos Analíticos,Probabilidad de mejora de plan (up-sell).
+VAL_PROM_PAGO_6M,solo_diccionario,Facturación & Cartera,Promedio de pago mensual en los últimos 6 meses.
+VAL_RECLAMOS_3M,solo_diccionario,"Reclamos, Llamadas & Soporte",Reclamos formales en los últimos 3 meses / en el mes.
+VAL_RECLAMOS_MES,ambos,"Reclamos, Llamadas & Soporte",Reclamos formales en los últimos 3 meses / en el mes.
+VAL_RENTA_ACTUAL,ambos,Facturación & Cartera,Cargo fijo mensual del servicio (renta actual).
+VAL_RENTA_ADIC,solo_diccionario,Facturación & Cartera,"Renta total de los servicios adicionales, sin IVA y con IVA respectivamente."
+VAL_RENTA_ADIC_IVA,ambos,Facturación & Cartera,"Renta total de los servicios adicionales, sin IVA y con IVA respectivamente."
+VAL_RENTA_BSC,solo_diccionario,Facturación & Cartera,"Renta total de los servicios básicos, sin IVA y con IVA respectivamente."
+VAL_RENTA_BSC_IVA,ambos,Facturación & Cartera,"Renta total de los servicios básicos, sin IVA y con IVA respectivamente."
+VAL_RENTA_M6,ambos,Facturación & Cartera,Renta facturada seis meses atrás (base para calcular variación).
+VAL_RESPONSE_RATE,solo_diccionario,Campañas & Retención (NBO/NBA),Tasa de respuesta a campañas anteriores.
+VAL_ROM,solo_diccionario,"Reclamos, Llamadas & Soporte",Indicador de calidad de la experiencia del cliente (fuente Avaya/Oracle).
+VAL_SALDO_ACTUAL,ambos,Facturación & Cartera,Saldo actual del cliente. Positivo = el cliente debe; negativo = saldo a favor.
+VAL_SCORE_CREDITICIO,ambos,Facturación & Cartera,Score crediticio del cliente.
+VAL_SENSIB_PRECIO,solo_diccionario,Scores & Modelos Analíticos,Sensibilidad del cliente a cambios de precio (variable de modelo).
+VAL_SMS_ENVIADOS,solo_diccionario,Servicio Móvil,Número de SMS enviados al mes.
+VAL_SRV_BSC,ambos,Servicios & Productos,Número de productos/servicios fijos básicos activos.
+VAL_SS_BCART,ambos,Facturación & Cartera,Número de servicios dados de baja por cartera o causa involuntaria.
+VAL_STREAMING_HOURS,solo_diccionario,Uso & Consumo,Horas de uso de servicios de streaming al mes.
+VAL_SUBMOTIVO,solo_diccionario,Intención de Cancelación & Churn,Submotivo por el cual el cliente intentó cancelar algún servicio de hogar.
+VAL_SUM_...,solo_diccionario,Servicio Móvil,Horas mensuales de uso en redes sociales.
+VAL_SUM_BAN_5G,ambos,Servicio Móvil,Marca/conteo de uso de red 5G.
+VAL_SUM_BAN_DUAL_SIM,ambos,Servicio Móvil,Marca/conteo de uso de doble SIM en el móvil.
+VAL_SUM_BAN_ROAMING,ambos,Servicio Móvil,Marca/conteo de uso de roaming internacional en los últimos 3 meses.
+VAL_SUM_BAN_TECNICO_30,ambos,"Reclamos, Llamadas & Soporte",Marca/conteo que indica si requirió visita técnica en los últimos 30 días.
+VAL_SUM_VAL_DATOS_MOVIL_MB,ambos,Servicio Móvil,"Consumo de datos móviles mensual, en MB."
+VAL_SUM_VAL_MINUTOS_VOZ,ambos,Servicio Móvil,Minutos de voz consumidos al mes.
+VAL_SUM_VAL_SMS_ENVIADOS,ambos,Servicio Móvil,Número de SMS enviados al mes.
+VAL_SUM_VAL_USO_CAT_APPS_PREFERIDAS,ambos,Servicio Móvil,Apps más usadas por el cliente (p. ej. gaming).
+VAL_SUM_VAL_USO_REDES_SOCIALES,solo_dataset,Servicio Móvil,
+VAL_TASAWIFI5_[OPERADOR],solo_diccionario,Equipos & Dispositivos (Hogar),"Tasa de conexión bajo estándar WiFi5, desagregada por operador (Claro, Movistar, Tigo, ETB, etc.)."
+VAL_TASAWIFI6+_[OPERADOR],solo_diccionario,Equipos & Dispositivos (Hogar),"Tasa de conexión bajo estándar WiFi6+, desagregada por operador."
+VAL_TASAWIFI6_[OPERADOR],solo_diccionario,Equipos & Dispositivos (Hogar),"Tasa de conexión bajo estándar WiFi6, desagregada por operador."
+VAL_TASA_LLAM_ADTIVAS_NEG_NODO,solo_diccionario,"Reclamos, Llamadas & Soporte",Tasa de llamadas administrativas negativas sobre el total de llamadas.
+VAL_TASA_LLAM_ADTIVAS_NEUTRAS,solo_diccionario,"Reclamos, Llamadas & Soporte",Tasa de llamadas por fallas administrativas neutras (cuentas únicas / hogares).
+VAL_TASA_LLAM_TEC_NEGATIVAS,solo_diccionario,"Reclamos, Llamadas & Soporte",Tasa de llamadas por fallas técnicas negativas.
+VAL_TASA_LLAM_TEC_NEUTRAS,solo_diccionario,"Reclamos, Llamadas & Soporte",Tasa de llamadas únicas por fallas técnicas neutras (cuentas únicas / hogares).
+VAL_TICKETS_3M,solo_diccionario,"Reclamos, Llamadas & Soporte",Número de tickets de soporte en los últimos 3 meses / en el mes.
+VAL_TICKETS_MES,ambos,"Reclamos, Llamadas & Soporte",Número de tickets de soporte en los últimos 3 meses / en el mes.
+VAL_TIEMPO_RESOL,solo_diccionario,"Reclamos, Llamadas & Soporte","Tiempo promedio de resolución de tickets, en horas."
+VAL_USO_DISNEY,solo_diccionario,Uso & Consumo,Horas de uso de Disney+ al mes.
+VAL_USO_NETFLIX,solo_diccionario,Uso & Consumo,Horas de uso de Netflix al mes.
+VAL_USO_PRIME,solo_diccionario,Uso & Consumo,Horas de uso de Prime al mes.
+VAL_USO_REDES_SOCIALES,solo_diccionario,Servicio Móvil,Horas mensuales de uso en redes sociales.
+VAL_USO_VIDEO_LLAMADAS,solo_diccionario,Servicio Móvil,Horas mensuales en videollamadas.
+VAL_USO_WIN,solo_diccionario,Uso & Consumo,Horas de uso de Win al mes.
+VAL_UW,ambos,Equipos & Dispositivos (Hogar),Número de dispositivos UltraWiFi instalados.
+VAL_VAR_RENTA,ambos,Facturación & Cartera,Variación porcentual de la renta en los últimos 6 meses. Fórmula: (renta actual − renta hace 6 meses) / renta hace 6 meses × 100.
+VAL_VELOCIDAD_CONEXION,solo_diccionario,Servicios & Productos,"Velocidad de internet contratada, en Mbps."
+VAL_VELOCIDAD_REAL,solo_diccionario,"Zona, Nodo & Calidad de Red","Velocidad promedio real medida, en Mbps."
+VAL_VELOCIDAD_[RANGO],solo_diccionario,"Zona, Nodo & Calidad de Red","Número de cuentas en el nodo por rango de velocidad contratada (p. ej. 30–50, 60–120, 140–200, 210–300, >300 Mb)."
+VELOCIDAD_INTERNET_MBPS,ambos,Servicios & Productos,"Velocidad de internet contratada, en Mbps."
+ZONA,solo_diccionario,Identificación & Demografía,Zona donde está instalado el servicio fijo.
