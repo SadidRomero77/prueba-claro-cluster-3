@@ -29,6 +29,23 @@ flowchart LR
   FM[Foundation Model API] --> APP
 ```
 
+## Arquitectura de producción
+
+```mermaid
+flowchart LR
+  F[Fuentes Claro<br/>clientes mensual · llamadas diario] --> B[Bronce<br/>Delta crudo]
+  B --> P[Plata<br/>limpio · PII enmascarada · roles corregidos]
+  P --> O[Oro<br/>scores · JSON por llamada · accionables]
+  O --> APP[Databricks App<br/>panel + agentes]
+  J[Lakeflow Jobs<br/>mensual · diario · lista semanal] -.orquesta.-> B
+  P --> ML[MLflow + Unity Catalog<br/>champion/challenger · prompts · trazas · linaje]
+  APP --> SV[Model Serving + AI Gateway<br/>LLM · Jev · endpoint del agente · guardrails]
+  SV -.-> VS[Vector Search<br/>llamadas etiquetadas para RAG]
+  ML -.-> MON[Monitoreo<br/>datos PSI · modelo AUC/lift · NLP drift · agentes latencia/costo]
+```
+
+Diagrama editable en el tablero de FigJam del roadmap (sección "Arquitectura Databricks (producción)").
+
 ## Capas
 
 | Capa | Contenido | Dónde vive |
