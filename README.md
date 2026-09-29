@@ -27,7 +27,9 @@ conversar con los datos y los modelos.
 
 - Se excluyeron variables con fuga (estado de la cuenta, planes de TV con sufijo I, reincidencias, reacciones de
   retención, saldo en churn). Con ellas ambos modelos dan AUC 1,0.
-- Precio y facturación es el motivo del 46,2 % de las llamadas de cancelación del Cluster 3.
+- Llamadas clasificadas con un método híbrido elegido contra 50 llamadas etiquetadas a mano (Jev para motivo y
+  sentimiento, LLM para urgencia y evidencia): precio y facturación es el motivo identificable principal (24,3 % de
+  las llamadas del Cluster 3) y el 28,2 % no tiene un motivo claro.
 - Seis accionables priorizados por impacto y esfuerzo, con impacto anual en tres escenarios.
 
 ## Inicio rápido
@@ -64,11 +66,21 @@ uv run python -m cluster3.agents.evals --offline
 
 Sin clave de LLM el grafo funciona en modo offline (enrutamiento y herramientas por reglas).
 
-## Evaluación del NLP (pendiente de etiquetas)
+## Evaluación del NLP
+
+| Campo | Reglas | LLM (Sonnet 5 + RAG) | Jev | Híbrido (final) |
+|---|---|---|---|---|
+| Motivo · exactitud / kappa | 38 % / 0,26 | 44 % / 0,35 | 62 % / 0,55 | **62 % / 0,55** |
+| Urgencia · exactitud / kappa | 38 % / 0,12 | 70 % / 0,40 | 54 % / 0,11 | **70 % / 0,40** |
+| Sentimiento · correlación | 0,56 | 0,47 | 0,75 | **0,75** |
+
+Fuente: `outputs/tables/nlp_benchmark.csv` (50 llamadas etiquetadas a mano: 40 del Cluster 3 y 10 de otros).
 
 ```bash
-uv run python -m cluster3.nlp.etiquetar                       # etiquetar 50 llamadas (~1 hora)
+uv run python -m cluster3.nlp.etiquetar --exportar-excel     # plantilla de etiquetado en Excel
+uv run python -m cluster3.nlp.etiquetar --importar-excel RUTA # etiquetas → data/labels/muestra_etiquetada.csv
 uv run python -m cluster3.nlp.run --llm --jev --solo-muestra  # reglas vs LLM vs Jev → outputs/tables/nlp_benchmark.csv
+uv run python -m cluster3.nlp.run --llm --jev                 # 500 llamadas con el método híbrido (reanuda si se corta)
 ```
 
 ## Pruebas

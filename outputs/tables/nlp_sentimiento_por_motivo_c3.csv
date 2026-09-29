@@ -1,9 +1,9 @@
 motivo,llamadas,sent_inicio,sent_fin,sent_delta,urgencia_alta_pct,reincidencia_pct,retenido_pct
-precio_facturacion,139,-0.05,-0.02,0.03,36.69,20.14,4.32
-otro,60,-0.01,-0.02,-0.01,0.0,0.0,0.0
-falla_tecnica,45,-0.19,-0.02,0.17,33.33,24.44,2.22
-traslado_cobertura,20,-0.08,-0.02,0.07,45.0,20.0,0.0
-atencion_servicio,18,-0.16,0.0,0.17,66.67,66.67,0.0
-competencia,11,0.02,-0.11,-0.13,72.73,9.09,0.0
-servicios_no_usados,6,-0.26,0.08,0.34,16.67,16.67,0.0
-situacion_economica,2,0.0,0.0,0.0,0.0,0.0,0.0
+otro,85,-0.24,-0.12,0.12,48.24,47.06,16.47
+precio_facturacion,73,-0.37,-0.08,0.28,46.58,63.01,45.21
+falla_tecnica,31,-0.46,-0.23,0.23,77.42,93.55,35.48
+servicios_no_usados,30,-0.26,-0.07,0.19,43.33,50.0,33.33
+atencion_servicio,25,-0.42,-0.18,0.24,72.0,88.0,28.0
+traslado_cobertura,23,-0.23,-0.1,0.13,56.52,52.17,17.39
+situacion_economica,19,-0.31,-0.06,0.25,42.11,47.37,42.11
+competencia,15,-0.24,-0.19,0.05,80.0,73.33,13.33

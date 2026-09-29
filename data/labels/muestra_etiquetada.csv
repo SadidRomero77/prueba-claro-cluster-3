@@ -1,51 +1,51 @@
 id_llamada,cluster,sugerencia_baseline,motivo_humano,submotivo_humano,urgencia_humana,sentimiento_humano_-1_0_1,notas
-53,1,atencion_servicio,,,,,
-34,2,traslado_cobertura,,,,,
-31,3,precio_facturacion,,,,,
-35,3,precio_facturacion,,,,,
-44,3,traslado_cobertura,,,,,
-51,3,atencion_servicio,,,,,
-54,3,falla_tecnica,,,,,
-56,3,atencion_servicio,,,,,
-59,3,precio_facturacion,,,,,
-64,3,precio_facturacion,,,,,
-67,3,otro,,,,,
-70,3,precio_facturacion,,,,,
-84,3,otro,,,,,
-103,3,precio_facturacion,,,,,
-117,3,otro,,,,,
-135,3,falla_tecnica,,,,,
-145,3,precio_facturacion,,,,,
-157,3,precio_facturacion,,,,,
-169,3,precio_facturacion,,,,,
-177,3,falla_tecnica,,,,,
-189,3,precio_facturacion,,,,,
-193,3,servicios_no_usados,,,,,
-236,3,otro,,,,,
-238,3,falla_tecnica,,,,,
-257,3,otro,,,,,
-266,3,precio_facturacion,,,,,
-328,3,falla_tecnica,,,,,
-333,3,precio_facturacion,,,,,
-335,3,falla_tecnica,,,,,
-361,3,precio_facturacion,,,,,
-369,3,traslado_cobertura,,,,,
-371,3,otro,,,,,
-376,3,precio_facturacion,,,,,
-385,3,precio_facturacion,,,,,
-391,3,precio_facturacion,,,,,
-394,3,precio_facturacion,,,,,
-400,3,otro,,,,,
-423,3,traslado_cobertura,,,,,
-425,3,precio_facturacion,,,,,
-440,3,competencia,,,,,
-444,3,otro,,,,,
-478,3,precio_facturacion,,,,,
-113,6,traslado_cobertura,,,,,
-194,6,precio_facturacion,,,,,
-313,6,precio_facturacion,,,,,
-321,6,servicios_no_usados,,,,,
-417,6,atencion_servicio,,,,,
-435,6,precio_facturacion,,,,,
-40,7,otro,,,,,
-217,7,falla_tecnica,,,,,
+53,1,atencion_servicio,atencion_servicio,reclamo_repetido,alta,-1,Solicita cancelación tras dificultades de validación y una llamada previa caída; el motivo específico del servicio no queda claro.
+34,2,traslado_cobertura,otro,no_identificado,baja,0,La llamada no permite identificar con claridad el motivo principal; se habla de traslado de titularidad y trámite presencial.
+31,3,precio_facturacion,falla_tecnica,sin_servicio,alta,-1,Se menciona servicio bloqueado y espera de soporte; contenido parcialmente incompleto.
+35,3,precio_facturacion,precio_facturacion,incremento_tarifa,alta,-1,La factura pasó de un valor menor a uno mucho más alto y el cliente cuestiona el incremento.
+44,3,traslado_cobertura,servicios_no_usados,decodificadores_equipos,alta,-1,El servicio/equipos están a nombre del cliente pero son usados por familiares; se solicita cancelación.
+51,3,atencion_servicio,precio_facturacion,cobro_no_reconocido,alta,-1,Se reclama el cobro de una pantalla/servicio no solicitado y dificultades para resolverlo.
+54,3,falla_tecnica,falla_tecnica,visita_tecnica_fallida,alta,-1,Hubo visita técnica sin solución y el cliente rechaza otra visita.
+56,3,atencion_servicio,otro,no_identificado,media,0,La transcripción es insuficiente para determinar el motivo de cancelación con seguridad.
+59,3,precio_facturacion,precio_facturacion,factura_alta,alta,-1,El cliente considera demasiado alta la factura y solicita un valor más económico.
+64,3,precio_facturacion,traslado_cobertura,cambio_domicilio,alta,0,Se muda a un lugar donde ya existe servicio y por eso no necesita mantener el servicio actual.
+67,3,otro,traslado_cobertura,cambio_domicilio,alta,0,Solicita cancelación porque se trasladó a otro apartamento.
+70,3,precio_facturacion,servicios_no_usados,adicionales_no_solicitados,alta,1,No utiliza el plan móvil porque ya tiene triple play; acepta una rebaja y decide continuar.
+84,3,otro,otro,no_identificado,alta,0,"Solicita cancelación, pero la transcripción no contiene suficiente información para identificar el motivo."
+103,3,precio_facturacion,situacion_economica,reduccion_gastos,media,-1,Quiere pasar a un plan móvil más básico y económico; además expresa molestia por gestiones repetidas.
+117,3,otro,otro,no_identificado,baja,0,Solo contiene validación de titularidad y PIN; no hay motivo de cancelación identificable.
+135,3,falla_tecnica,falla_tecnica,visita_tecnica_fallida,alta,-1,"El servicio no funciona, la visita/reparación no resuelve y el cliente exige cancelación."
+145,3,precio_facturacion,falla_tecnica,sin_servicio,alta,-1,"Reporta casi un mes sin internet, visitas previas sin solución y decide irse a otro operador."
+157,3,precio_facturacion,precio_facturacion,factura_alta,alta,-1,Considera excesiva la factura y señala que el servicio es costoso; también menciona problemas previos de atención.
+169,3,precio_facturacion,servicios_no_usados,adicionales_no_solicitados,alta,0,Quiere cancelar una línea prepago que ya no utiliza y que mantiene como cargo.
+177,3,falla_tecnica,atencion_servicio,reclamo_repetido,alta,-1,Lleva varios días intentando cancelar y reporta múltiples contactos y trámites que no avanzan.
+189,3,precio_facturacion,precio_facturacion,incremento_tarifa,media,0,Solicita cancelación porque la factura subió y busca un precio más económico.
+193,3,servicios_no_usados,atencion_servicio,mala_atencion,alta,-1,Ha pasado por varios asesores y expresa fuerte molestia por la atención y la dificultad para cancelar.
+236,3,otro,otro,no_identificado,alta,0,La llamada prácticamente no contiene información utilizable para determinar el motivo.
+238,3,falla_tecnica,falla_tecnica,intermitencia_caidas,media,-1,"El internet se cae con frecuencia, hubo varios contactos sin solución y amenaza con cancelar."
+257,3,otro,otro,no_identificado,media,0,Transcripción demasiado fragmentada para identificar el motivo.
+266,3,precio_facturacion,otro,no_identificado,media,0,"Se habla de activación y facturación, pero no hay evidencia suficiente del motivo principal de cancelación."
+328,3,falla_tecnica,servicios_no_usados,tv_no_usada,media,0,Quiere conservar solo internet y cancelar televisión/telefonía; la razón principal es reducir servicios.
+333,3,precio_facturacion,servicios_no_usados,tv_no_usada,media,0,Solicita quedar sin televisión y consulta el costo de mantener solo internet.
+335,3,falla_tecnica,servicios_no_usados,adicionales_no_solicitados,alta,-1,Indica que paga telefonía/servicios que nunca usa y que ya había pedido retirarlos; además reporta caídas de conexión.
+361,3,precio_facturacion,servicios_no_usados,tv_no_usada,alta,-1,Reclama retiro de canales que pagaba y problemas con cambios del servicio; la transcripción es parcial.
+369,3,traslado_cobertura,otro,no_identificado,baja,0,Es una llamada de seguimiento por una oferta de 900 megas después de una cancelación; no queda un motivo de baja claro.
+371,3,otro,otro,no_identificado,alta,0,Transcripción insuficiente para identificar el motivo.
+376,3,precio_facturacion,competencia,oferta_competidor,alta,-1,Indica que ya tiene otro operador con mejores beneficios y precio.
+385,3,precio_facturacion,precio_facturacion,cobro_no_reconocido,alta,-1,Reclama problemas repetidos con facturación y una factura que supuestamente ya había sido corregida.
+391,3,precio_facturacion,precio_facturacion,cobro_no_reconocido,alta,-1,Reporta cobros injustificados y una factura mayor a la esperada; solicita cancelación definitiva.
+394,3,precio_facturacion,otro,no_identificado,baja,1,La llamada se centra en renovar/aceptar una oferta posterior a una cancelación; no hay un motivo de baja identificable.
+400,3,otro,otro,no_identificado,alta,0,Transcripción insuficiente para identificar el motivo.
+423,3,traslado_cobertura,traslado_cobertura,cambio_domicilio,alta,0,Se va a otra ciudad y solicita cancelación porque en el nuevo lugar no habría cobertura.
+425,3,precio_facturacion,servicios_no_usados,tv_no_usada,alta,0,Indica que ya no necesita el servicio porque en otra vivienda/familiar ya cuentan con Claro; la transcripción es parcial.
+440,3,competencia,atencion_servicio,reclamo_repetido,alta,-1,Es la cuarta llamada y aún no logra cancelar el servicio; expresa frustración por la atención.
+444,3,otro,servicios_no_usados,decodificadores_equipos,media,-1,Quiere cancelar porque los equipos/servicio ya no le sirven y pregunta dónde entregarlos.
+478,3,precio_facturacion,otro,no_identificado,baja,0,La transcripción corresponde principalmente al cierre de la llamada y no permite identificar el motivo.
+113,6,traslado_cobertura,traslado_cobertura,traslado_sin_cobertura,alta,-1,El traslado no se pudo concretar; el cliente evalúa irse con otro operador.
+194,6,precio_facturacion,otro,no_identificado,alta,0,La razón explícita es que se va del país; no encaja de forma exacta en los submotivos disponibles.
+313,6,precio_facturacion,situacion_economica,reduccion_gastos,alta,0,Solicita un plan más económico antes de cancelar.
+321,6,servicios_no_usados,otro,no_identificado,alta,0,"Se solicita cancelación, pero la transcripción no permite establecer con claridad la causa."
+417,6,atencion_servicio,otro,no_identificado,alta,0,Transcripción demasiado fragmentada para identificar el motivo.
+435,6,precio_facturacion,otro,no_identificado,alta,-1,"Quiere cancelar para cambiar a otro plan de Claro; además reclama facturación duplicada, pero el objetivo principal es cambiar de plan."
+40,7,otro,otro,no_identificado,alta,0,Cancela porque se va del país; no hay un submotivo específico equivalente en las opciones.
+217,7,falla_tecnica,servicios_no_usados,adicionales_no_solicitados,baja,0,Indica que no había nadie usando el servicio y solicita cancelar el plan más bajo; transcripción parcial.

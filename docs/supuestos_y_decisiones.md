@@ -60,9 +60,12 @@ de churn (AUC 0,991 → 0,970).
 | N1 | Segunda pasada de anonimización antes de cualquier LLM | Quedaban nombres después de "mi nombre es" y números largos (81 reemplazos) |
 | N2 | Corrección de roles por guion del agente | 158 llamadas con AGENT/CLIENT invertidos |
 | N3 | Si la diarización falla, se usa el texto completo y se marca `diarizacion_ok = False` | 78 llamadas; descartarlas sesgaba la muestra |
-| N4 | Taxonomía v1.0 con 8 motivos y submotivos | Fija y versionada: los tres clasificadores (reglas, LLM, Jev) responden igual |
+| N4 | Taxonomía v1.1 con 8 motivos y submotivos (v1.1: operadores como palabra completa) | Fija y versionada: los tres clasificadores (reglas, LLM, Jev) responden igual |
 | N5 | La evidencia del LLM debe ser cita literal; si no, un reintento | Evita motivos sin sustento |
-| N6 | Evaluación contra 50 llamadas etiquetadas a mano (40 del Cluster 3 + 10 de otros) | Es la única forma de elegir método con datos |
+| N6 | Evaluación contra 50 llamadas etiquetadas a mano (40 del Cluster 3 + 10 de otros) | Es la única forma de elegir método con datos. Motivo: reglas 38 %, LLM 44 %, Jev 62 % de exactitud |
+| N8 | Método final híbrido: Jev para motivo y sentimiento; LLM para urgencia, submotivo, evidencia y trayectoria | Cada campo con el método que mejor coincide con las etiquetas humanas (`nlp_benchmark.csv`). Jev no genera texto |
+| N9 | El prompt del LLM no se ajustó contra la muestra etiquetada | Afinarlo con las mismas 50 llamadas inflaría el resultado. El LLM asigna motivo a llamadas ambiguas (coincidió en 2 de 17 marcadas como "otro"): mejora pendiente con otra muestra |
+| N10 | Corrección: "Tigo en 34 llamadas" era un falso positivo | La regla contaba "contigo"; con palabra completa hay 0 menciones de operadores por nombre |
 | N7 | Llamadas y dataset se cruzan en agregado | No hay llave común a nivel cliente |
 
 ## Negocio

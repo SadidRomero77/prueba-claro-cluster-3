@@ -7,7 +7,7 @@ La usan tres clasificadores:
 """
 from __future__ import annotations
 
-TAXONOMY_VERSION = "v1.0"
+TAXONOMY_VERSION = "v1.1"  # v1.1: operadores como palabra completa ("contigo" contaba como Tigo)
 
 MOTIVOS: dict[str, dict] = {
     "precio_facturacion": {
@@ -39,7 +39,7 @@ MOTIVOS: dict[str, dict] = {
     "competencia": {
         "definicion": "Se va a otro operador o tiene una oferta mejor de la competencia.",
         "submotivos": {
-            "oferta_competidor": r"(?:tigo|movistar|\bwom\b|\betb\b|\bune\b|otra (?:empresa|compa[ñn][íi]a|operador)|me ofrecen|mejor oferta|m[áa]s barato)",
+            "oferta_competidor": r"(?:\btigo\b|\bmovistar\b|\bwom\b|\betb\b|\bune\b|otra (?:empresa|compa[ñn][íi]a|operador)|me ofrecen|mejor oferta|m[áa]s barato)",
             "portabilidad": r"(?:portabilidad|portar|pasarme a)",
         },
     },
@@ -83,7 +83,7 @@ URGENCIA = {
     "baja": "Consulta o negocia; no hay intención firme de irse.",
 }
 
-PATRONES_URGENCIA_ALTA = r"(?:hoy mismo|ya mismo|de una vez|inmediat|ya no m[áa]s|no puedo m[áa]s|quiero cancelar ya|portabilidad|tigo|movistar|\bwom\b|\betb\b)"
+PATRONES_URGENCIA_ALTA = r"(?:hoy mismo|ya mismo|de una vez|inmediat|ya no m[áa]s|no puedo m[áa]s|quiero cancelar ya|portabilidad|\btigo\b|\bmovistar\b|\bwom\b|\betb\b)"
 PATRONES_URGENCIA_BAJA = r"(?:solo quer[íi]a (?:saber|preguntar)|informaci[óo]n|cu[áa]nto (?:cuesta|vale)|qu[ée] opciones)"
 
 LEXICO_NEGATIVO = [
@@ -105,7 +105,7 @@ EMOCIONES = {
     "tristeza": r"(?:triste|qu[ée] tristeza)",
 }
 
-COMPETIDORES = r"(tigo|movistar|\bwom\b|\betb\b|\bune\b|directv|hughesnet)"
+COMPETIDORES = r"(\btigo\b|\bmovistar\b|\bwom\b|\betb\b|\bune\b|directv|hughesnet)"
 
 
 def taxonomy_text() -> str:

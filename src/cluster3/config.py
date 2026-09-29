@@ -34,6 +34,8 @@ T_CLIENTES_LIMPIO = DATA_PROCESSED / "clientes_c3_limpio.parquet"
 T_SCORES = DATA_PROCESSED / "clientes_c3_scores.parquet"
 T_LLAMADAS_LIMPIAS = DATA_PROCESSED / "llamadas_limpias.parquet"
 T_LLAMADAS_ANALISIS = DATA_PROCESSED / "llamadas_analisis.parquet"
+# Clasificación híbrida (Jev + LLM) de las 500 llamadas: se reutiliza en corridas sin API para no volver a reglas.
+T_LLAMADAS_HIBRIDO = DATA_PROCESSED / "llamadas_hibrido.parquet"
 DUCKDB_PATH = DATA_PROCESSED / "cluster3.duckdb"
 
 SEED = 42

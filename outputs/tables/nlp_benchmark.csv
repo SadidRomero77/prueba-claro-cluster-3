@@ -1,0 +1,13 @@
+metodo,campo,n,exactitud,f1_macro,kappa,correlacion_spearman
+baseline,motivo,50,0.38,0.267,0.26,
+baseline,urgencia,50,0.38,0.344,0.124,
+baseline,sentimiento,50,0.66,0.581,0.441,0.558
+llm,motivo,50,0.44,0.379,0.346,
+llm,urgencia,50,0.7,0.52,0.4,
+llm,sentimiento,50,0.62,0.623,0.293,0.471
+jev,motivo,50,0.62,0.605,0.547,
+jev,urgencia,50,0.54,0.395,0.111,
+jev,sentimiento,50,0.62,0.504,0.33,0.751
+hibrido,motivo,50,0.62,0.605,0.547,
+hibrido,urgencia,50,0.7,0.52,0.4,
+hibrido,sentimiento,50,0.62,0.504,0.33,0.751

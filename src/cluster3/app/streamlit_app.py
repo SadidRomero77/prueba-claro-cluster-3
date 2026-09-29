@@ -240,7 +240,18 @@ with st.sidebar:
     modo = st.radio("Modo del agente", opciones, index=0, horizontal=True,
                     help="llm: agentes ReAct con herramientas. offline: enrutamiento y herramientas por reglas, "
                          "sin clave de API.")
-    if hay_llm:
+    modelo_elegido = None
+    if hay_llm and config.LLM_PROVIDER == "openrouter" and modo == "llm":
+        opciones_m = list(llm_factory.MODELOS_OPENROUTER)
+        por_defecto = llm_factory.model_name()
+        modelo_elegido = st.selectbox(
+            "Modelo de lenguaje", opciones_m,
+            index=opciones_m.index(por_defecto) if por_defecto in opciones_m else 0,
+            format_func=lambda m: llm_factory.MODELOS_OPENROUTER[m],
+            help="Modelo de los especialistas, la síntesis y la conversación. El orquestador y el juez usan "
+                 f"siempre el modelo rápido ({llm_factory.model_name(rapido=True)}).")
+        st.caption(f"Proveedor `openrouter` · `{modelo_elegido}`")
+    elif hay_llm:
         st.caption(f"Proveedor `{config.LLM_PROVIDER}` · modelo `{llm_factory.model_name()}`")
     st.caption(f"Prompts `{P.PROMPT_VERSION}`")
     st.divider()
@@ -307,11 +318,11 @@ with tabs[0]:
         hallazgos.append(("🧯", "Se evitó la trampa de la fuga",
                           f"Con variables que ya contienen el resultado, el modelo daba AUC **{_d(auc_fuga, 2)}**. "
                           "Se excluyeron: estado de la cuenta, planes de TV con sufijo I, reincidencias y retención."))
-    if nlp.get("competidores_c3"):
-        tigo = nlp["competidores_c3"].get("tigo", 0)
-        hallazgos.append(("🏁", "La competencia aparece en la llamada",
-                          f"Tigo se menciona en **{_n(tigo)}** llamadas del Cluster 3; "
-                          f"el **{_pct(nlp.get('urgencia_c3_pct', {}).get('alta', 0) / 100)}** tiene urgencia alta."))
+    if nlp.get("urgencia_c3_pct"):
+        hallazgos.append(("🔁", "Llaman con urgencia y ya habían reclamado",
+                          f"El **{_pct(nlp['urgencia_c3_pct'].get('alta', 0) / 100)}** de las llamadas del Cluster 3 "
+                          f"tiene urgencia alta y el **{_pct(nlp.get('reincidencia_c3_pct', 0) / 100)}** menciona un "
+                          f"reclamo previo; se retiene al **{_pct(nlp.get('resultado_c3_pct', {}).get('retenido', 0) / 100)}**."))
     if a1 is not None and len(a1):
         top = a1.sort_values("impacto_anual_base_cop", ascending=False).iloc[0]
         hallazgos.append(("🚀", "Primer paso recomendado",
@@ -422,7 +433,7 @@ with tabs[3]:
             ("Urgencia alta", _pct(nlp.get("urgencia_c3_pct", {}).get("alta", 0) / 100), "pide la baja ya", "orange"),
             ("Sentimiento empeora", _pct(nlp.get("sentimiento_c3", {}).get("empeora_pct", 0) / 100),
              "del inicio al final de la llamada", ""),
-            ("Menciones a Tigo", _n(nlp.get("competidores_c3", {}).get("tigo", 0)), "llamadas", ""),
+            ("Reclamo previo mencionado", _pct(nlp.get("reincidencia_c3_pct", 0) / 100), "reincidencia en la llamada", ""),
         ])
         mot = _csv("nlp_motivos_c3_vs_otros.csv")
         if mot is not None:
@@ -541,6 +552,8 @@ with tabs[5]:
             badges += pill("⚡ Respuesta en caché", "gray")
         elif r.get("latencia_ms"):
             badges += pill(f"⏱ {_d(r['latencia_ms'] / 1000, 1)} s", "gray")
+        if r.get("modelo"):
+            badges += pill(f"🧠 {llm_factory.MODELOS_OPENROUTER.get(r['modelo'], r['modelo']).split(' · ')[0]}", "gray")
         if badges:
             st.markdown(badges, unsafe_allow_html=True)
         st.markdown(r.get("respuesta") or "")
@@ -611,7 +624,7 @@ with tabs[5]:
 
             # Vista previa en vivo; al terminar se reemplaza por la respuesta verificada por el crítico.
             r = ask(pregunta, thread_id=None, modo=modo, historial=historial,
-                    on_token=lambda t: vista.markdown(t + " ▌"), on_evento=_evento)
+                    on_token=lambda t: vista.markdown(t + " ▌"), on_evento=_evento, modelo=modelo_elegido)
         ss.thread = r["thread_id"]
         if "interrupt" in r:
             ss.pendiente = r["interrupt"]

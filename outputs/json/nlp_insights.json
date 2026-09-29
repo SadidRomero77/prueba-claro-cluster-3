@@ -2,46 +2,50 @@
   "llamadas_validas": 481,
   "llamadas_c3": 301,
   "motivos_c3_pct": {
-    "precio_facturacion": 46.2,
-    "otro": 19.9,
-    "falla_tecnica": 15.0,
-    "traslado_cobertura": 6.6,
-    "atencion_servicio": 6.0,
-    "competencia": 3.7,
-    "servicios_no_usados": 2.0,
-    "situacion_economica": 0.7
+    "otro": 28.2,
+    "precio_facturacion": 24.3,
+    "falla_tecnica": 10.3,
+    "servicios_no_usados": 10.0,
+    "atencion_servicio": 8.3,
+    "traslado_cobertura": 7.6,
+    "situacion_economica": 6.3,
+    "competencia": 5.0
   },
   "motivos_otros_pct": {
-    "precio_facturacion": 38.9,
-    "otro": 29.4,
-    "falla_tecnica": 7.2,
-    "traslado_cobertura": 8.3,
-    "atencion_servicio": 10.0,
-    "competencia": 2.8,
-    "servicios_no_usados": 2.8,
-    "situacion_economica": 0.6
+    "otro": 31.7,
+    "precio_facturacion": 21.1,
+    "falla_tecnica": 6.1,
+    "servicios_no_usados": 10.6,
+    "atencion_servicio": 5.6,
+    "traslado_cobertura": 11.7,
+    "situacion_economica": 7.2,
+    "competencia": 6.1
   },
   "urgencia_c3_pct": {
-    "media": 62.8,
-    "alta": 31.9,
-    "baja": 5.3
+    "alta": 54.2,
+    "media": 42.9,
+    "baja": 3.0
   },
   "resultado_c3_pct": {
-    "no_determinado": 95.3,
-    "retenido": 2.3,
-    "no_retenido": 2.3
+    "pendiente": 49.2,
+    "retenido": 29.6,
+    "no_retenido": 16.3,
+    "no_determinado": 5.0
   },
   "sentimiento_c3": {
-    "inicio": -0.073,
-    "fin": -0.018,
-    "empeora_pct": 21.6
+    "inicio": -0.313,
+    "fin": -0.118,
+    "empeora_pct": 27.2
   },
   "competidores_c3": {
-    "tigo": 34
+    "otro operador (sin nombre)": 9
   },
-  "reincidencia_c3_pct": 18.9,
-  "oferta_ofrecida_c3_pct": 56.5,
-  "metodo_final": "baseline_reglas",
+  "reincidencia_c3_pct": 61.1,
+  "oferta_ofrecida_c3_pct": 65.8,
+  "metodo_final": "hibrido_jev_llm",
+  "metodos_por_llamada": {
+    "hibrido_jev_llm": 500
+  },
   "preprocesamiento": {
     "roles_corregidos": 158,
     "pii_reemplazos": 81,
@@ -51,13 +55,118 @@
   },
   "benchmark": [
     {
-      "estado": "Sin etiquetas humanas todavía: completa data/labels/muestra_etiquetada.csv"
+      "metodo": "baseline",
+      "campo": "motivo",
+      "n": 50,
+      "exactitud": 0.38,
+      "f1_macro": 0.267,
+      "kappa": 0.26,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "baseline",
+      "campo": "urgencia",
+      "n": 50,
+      "exactitud": 0.38,
+      "f1_macro": 0.344,
+      "kappa": 0.124,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "baseline",
+      "campo": "sentimiento",
+      "n": 50,
+      "exactitud": 0.66,
+      "f1_macro": 0.581,
+      "kappa": 0.441,
+      "correlacion_spearman": 0.558
+    },
+    {
+      "metodo": "llm",
+      "campo": "motivo",
+      "n": 50,
+      "exactitud": 0.44,
+      "f1_macro": 0.379,
+      "kappa": 0.346,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "llm",
+      "campo": "urgencia",
+      "n": 50,
+      "exactitud": 0.7,
+      "f1_macro": 0.52,
+      "kappa": 0.4,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "llm",
+      "campo": "sentimiento",
+      "n": 50,
+      "exactitud": 0.62,
+      "f1_macro": 0.623,
+      "kappa": 0.293,
+      "correlacion_spearman": 0.471
+    },
+    {
+      "metodo": "jev",
+      "campo": "motivo",
+      "n": 50,
+      "exactitud": 0.62,
+      "f1_macro": 0.605,
+      "kappa": 0.547,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "jev",
+      "campo": "urgencia",
+      "n": 50,
+      "exactitud": 0.54,
+      "f1_macro": 0.395,
+      "kappa": 0.111,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "jev",
+      "campo": "sentimiento",
+      "n": 50,
+      "exactitud": 0.62,
+      "f1_macro": 0.504,
+      "kappa": 0.33,
+      "correlacion_spearman": 0.751
+    },
+    {
+      "metodo": "hibrido",
+      "campo": "motivo",
+      "n": 50,
+      "exactitud": 0.62,
+      "f1_macro": 0.605,
+      "kappa": 0.547,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "hibrido",
+      "campo": "urgencia",
+      "n": 50,
+      "exactitud": 0.7,
+      "f1_macro": 0.52,
+      "kappa": 0.4,
+      "correlacion_spearman": NaN
+    },
+    {
+      "metodo": "hibrido",
+      "campo": "sentimiento",
+      "n": 50,
+      "exactitud": 0.62,
+      "f1_macro": 0.504,
+      "kappa": 0.33,
+      "correlacion_spearman": 0.751
     }
   ],
   "puente": [
     {
       "motivo_llamadas": "precio_facturacion",
-      "pct_llamadas_c3": 46.2,
+      "pct_llamadas_c3": 24.3,
       "variable_dataset": "Renta subió más de 5 % vs hace 6 meses",
       "pct_clientes_c3": 25.9,
       "intencion_con_senal_pct": 14.3,
@@ -67,7 +176,7 @@
     },
     {
       "motivo_llamadas": "servicios_no_usados",
-      "pct_llamadas_c3": 2.0,
+      "pct_llamadas_c3": 10.0,
       "variable_dataset": "Tiene equipos adicionales",
       "pct_clientes_c3": 3.8,
       "intencion_con_senal_pct": 20.8,
@@ -77,7 +186,7 @@
     },
     {
       "motivo_llamadas": "falla_tecnica",
-      "pct_llamadas_c3": 15.0,
+      "pct_llamadas_c3": 10.3,
       "variable_dataset": "Llamadas técnicas negativas o downtime > 0",
       "pct_clientes_c3": 16.3,
       "intencion_con_senal_pct": 14.1,
@@ -87,7 +196,7 @@
     },
     {
       "motivo_llamadas": "competencia",
-      "pct_llamadas_c3": 3.7,
+      "pct_llamadas_c3": 5.0,
       "variable_dataset": "Zona de alta competencia o competencia mejor",
       "pct_clientes_c3": 71.4,
       "intencion_con_senal_pct": 19.9,
@@ -97,7 +206,7 @@
     },
     {
       "motivo_llamadas": "traslado_cobertura",
-      "pct_llamadas_c3": 6.6,
+      "pct_llamadas_c3": 7.6,
       "variable_dataset": "Tiene marca de traslado",
       "pct_clientes_c3": 1.1,
       "intencion_con_senal_pct": 16.1,
@@ -107,7 +216,7 @@
     },
     {
       "motivo_llamadas": "atencion_servicio",
-      "pct_llamadas_c3": 6.0,
+      "pct_llamadas_c3": 8.3,
       "variable_dataset": "2 o más reclamos en el mes",
       "pct_clientes_c3": 22.3,
       "intencion_con_senal_pct": 11.7,
@@ -117,7 +226,7 @@
     },
     {
       "motivo_llamadas": "situacion_economica",
-      "pct_llamadas_c3": 0.7,
+      "pct_llamadas_c3": 6.3,
       "variable_dataset": "Score crediticio en el quintil más bajo",
       "pct_clientes_c3": 19.8,
       "intencion_con_senal_pct": 32.7,

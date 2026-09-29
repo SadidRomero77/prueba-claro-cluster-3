@@ -6,8 +6,8 @@
 | A2 | Alerta de subida de factura: contactar antes de que llegue el incremento | Proactivo | 2 · Estratégico | Con renta +5 % vs 6 meses el churn es 0,87 % vs 0,40 %; 5.178 clientes con subida | Churn a 60 días en clientes con incremento; tasa de aceptación del ajuste |
 | A3 | Ajustar el plan a lo que el cliente usa (retirar TV, decos o adicionales) en lugar de descontar | Reactivo | 2 · Estratégico | 2.473 clientes con intención tienen renta menor que hace 6 meses (−$62,4 M/mes); con equipos adicionales el churn es 7,8 % | Renta retenida neta de descuentos; % retenidos con ajuste vs con descuento |
 | A4 | Oferta de retención por motivo (Next Best Offer) y sin descuento adicional a cazadores de ofertas | Reactivo | 3 · Complementario | 967 cazadores de ofertas: churn 0,0 %, intención 11,9 %; negocian pero no se van. Descuento promedio implícito: $25.226/mes | Tasa de retención por motivo; costo de retención por cliente salvado |
-| A5 | Coaching de agentes de retención con la trayectoria de sentimiento de sus llamadas | Reactivo | 3 · Complementario | En el 22 % de las llamadas del Cluster 3 el sentimiento empeora hacia el final | % de llamadas con sentimiento que mejora; retención por agente |
-| A6 | Resolver cobros no reconocidos en el primer contacto, con autonomía del agente para reversar | Reactivo | 4 · Evaluar | Con 2+ reclamos en el mes el churn es 1,25 % vs 0,31 %; precio y facturación es el motivo del 46 % de las llamadas del Cluster 3 | Resolución en primer contacto; reclamos repetidos a 30 días |
+| A5 | Coaching de agentes de retención con la trayectoria de sentimiento de sus llamadas | Reactivo | 3 · Complementario | En el 27 % de las llamadas del Cluster 3 el sentimiento empeora hacia el final | % de llamadas con sentimiento que mejora; retención por agente |
+| A6 | Resolver cobros no reconocidos en el primer contacto, con autonomía del agente para reversar | Reactivo | 4 · Evaluar | Con 2+ reclamos en el mes el churn es 1,25 % vs 0,31 %; precio y facturación es el motivo del 24 % de las llamadas del Cluster 3 | Resolución en primer contacto; reclamos repetidos a 30 días |
 
 ## Impacto anual estimado (COP)
 

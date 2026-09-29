@@ -39,6 +39,7 @@ PIDE_LISTA = r"lista de contacto|exporta|genera(?:r)? (?:la |una )?lista"
 class State(TypedDict, total=False):
     pregunta: str
     pregunta_autonoma: str
+    modelo: str | None
     historial: list[dict]
     modo: str
     agentes: list[str]
@@ -67,7 +68,7 @@ class Veredicto(BaseModel):
 SALUDO = (r"^\s*(hola|buen[oa]s|hey|saludos|qu[ée] tal|gracias|muchas gracias|qui[ée]n eres|"
           r"qu[ée] (puedes|sabes) hacer|c[óo]mo (funcionas|me ayudas)|pres[ée]ntate|ayuda)\b")
 RULES = {
-    "voz_cliente": r"llamad|motivo|dicen|sentim|urgenc|queja|voz|transcrip|ejemplo|reclam|competid|tigo",
+    "voz_cliente": r"llamad|motivo|dicen|sentim|urgenc|queja|voz|transcrip|ejemplo|reclam|competid|\btigo\b",
     "estrategia": r"accion|estrateg|impacto|priori|recomiend|recomenda|qu[ée] hac|retener|retenci|lista|contact|plan de|ahorro|insight|hallazg|mejorar|oportunidad|identific|conclusi|aprendi",
     "perfilado": r"churn|intenci|modelo|variable|segment|cliente|tasa|arpu|riesgo|estrato|score|cu[áa]nt|shap|lift|auc|kpi|perfil|\bml\b|machine|predictiv|entren",
 }
@@ -149,7 +150,7 @@ def especialistas(state: State) -> dict:
     def _uno(ag: str):
         t0 = time.time()
         if state.get("modo") == "llm":
-            res, ev, tools_used, pend = _run_react(ag, q)
+            res, ev, tools_used, pend = _run_react(ag, q, state.get("modelo"))
         else:
             res, ev, tools_used, pend = [], [], [], None
             for name, args in _offline_calls(ag, q):
@@ -180,7 +181,7 @@ def especialistas(state: State) -> dict:
     return {"resultados": resultados, "evidencia": evidencia, "pendiente": pendiente, "traza": traza}
 
 
-def _run_react(agente: str, q: str):
+def _run_react(agente: str, q: str, modelo: str | None = None):
     """Agente ReAct con tool calling. Las herramientas sensibles se interceptan para aprobación."""
     from langchain_core.messages import ToolMessage
     from langchain_core.tools import StructuredTool
@@ -198,7 +199,7 @@ def _run_react(agente: str, q: str):
         return StructuredTool.from_function(fn)
 
     tools = [_wrap(f) for f in T.TOOLS_POR_AGENTE[agente]]
-    agent = create_react_agent(llm_factory.get_chat_model(), tools, prompt=SYSTEM[agente])
+    agent = create_react_agent(llm_factory.get_chat_model(modelo=modelo), tools, prompt=SYSTEM[agente])
     out = agent.invoke({"messages": [("user", q)]}, {"recursion_limit": 12})
     msgs = out["messages"]
     ev = [f"[{m.name}] {m.content}" for m in msgs if isinstance(m, ToolMessage)]
@@ -213,7 +214,7 @@ def conversacion(state: State) -> dict:
     if state.get("modo") == "llm":
         hist = _historial_txt(state)
         user = f"Historial reciente:\n{hist}\n\nMensaje: {state['pregunta']}" if hist else state["pregunta"]
-        resp = llm_factory.get_chat_model().invoke([("system", P.CONVERSACION), ("user", user)]).content
+        resp = llm_factory.get_chat_model(modelo=state.get("modelo")).invoke([("system", P.CONVERSACION), ("user", user)]).content
     else:
         equipo = "\n".join(f"- **{n}**: {d}" for k, (n, d) in P.AGENTES_INFO.items() if k != "orquestador")
         resp = ("¡Hola! Soy el asistente del Cluster 3 de Claro Colombia. Coordino un equipo de agentes que analiza "
@@ -274,7 +275,7 @@ def sintesis(state: State) -> dict:
             f"Pregunta: {q}\n\nRespuestas de especialistas:\n{partes}\n\nEvidencia de herramientas:\n{ev}"
         if feedback:
             msg += f"\n\nCORRECCIÓN DEL CRÍTICO: {feedback}"
-        resp = llm_factory.get_chat_model().invoke([("system", P.SINTESIS), ("user", msg)]).content
+        resp = llm_factory.get_chat_model(modelo=state.get("modelo")).invoke([("system", P.SINTESIS), ("user", msg)]).content
     else:
         resp = _offline_answer(state)
     return {"respuesta": resp, "intentos": state.get("intentos", 0) + 1,
@@ -446,7 +447,7 @@ def default_mode() -> str:
     return "llm" if llm_factory.llm_available() else "offline"
 
 
-_CACHE: dict[tuple[str, str], dict] = {}
+_CACHE: dict[tuple[str, str, str], dict] = {}
 NODOS_QUE_REDACTAN = {"sintesis", "conversacion"}
 
 
@@ -459,8 +460,10 @@ def _texto(chunk) -> str:
 
 def ask(pregunta: str, thread_id: str | None = None, modo: str | None = None,
         historial: list[dict] | None = None, usar_cache: bool = True,
-        on_token=None, on_evento=None) -> dict:
+        on_token=None, on_evento=None, modelo: str | None = None) -> dict:
     """Ejecuta el grafo. Si se detiene por aprobación, devuelve {'interrupt': ..., 'thread_id': ...}.
+
+    modelo: LLM de los especialistas, la síntesis y la conversación (None = LLM_MODEL o el default del proveedor).
 
     historial: turnos previos [{"rol": "user" | "assistant", "texto": ...}] para preguntas de seguimiento.
     usar_cache: una pregunta repetida sin historial se responde desde memoria (nunca las que piden aprobación).
@@ -470,13 +473,13 @@ def ask(pregunta: str, thread_id: str | None = None, modo: str | None = None,
     """
     t0 = time.time()
     modo = modo or default_mode()
-    clave = (re.sub(r"\s+", " ", pregunta.strip().lower()), modo)
+    clave = (re.sub(r"\s+", " ", pregunta.strip().lower()), modo, modelo or "")
     if usar_cache and not historial and clave in _CACHE:
         return {**_CACHE[clave], "thread_id": thread_id or str(uuid.uuid4()), "desde_cache": True,
                 "latencia_ms": _ms(t0)}
     thread_id = thread_id or str(uuid.uuid4())
     cfg = {"configurable": {"thread_id": thread_id}}
-    entrada = {"pregunta": pregunta, "modo": modo, "traza": [], "historial": historial or []}
+    entrada = {"pregunta": pregunta, "modo": modo, "modelo": modelo, "traza": [], "historial": historial or []}
     agentes: list[str] = []
     msg_id, parcial = None, ""
     for ns, tipo, data in get_graph().stream(entrada, cfg, stream_mode=["messages", "updates"], subgraphs=True):
@@ -525,7 +528,8 @@ def _package(out: dict, thread_id: str) -> dict:
     if "__interrupt__" in out:
         return {"thread_id": thread_id, "interrupt": out["__interrupt__"][0].value}
     return {"thread_id": thread_id, "respuesta": out.get("respuesta"), "agentes": out.get("agentes"),
-            "critica": out.get("critica"), "traza": out.get("traza"), "evidencia": out.get("evidencia")}
+            "critica": out.get("critica"), "traza": out.get("traza"), "evidencia": out.get("evidencia"),
+            "modelo": out.get("modelo")}
 
 
 if __name__ == "__main__":

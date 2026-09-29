@@ -23,6 +23,17 @@ DEFAULTS_RAPIDO = {
     "openrouter": "anthropic/claude-haiku-4.5",
     "databricks": "databricks-meta-llama-3-3-70b-instruct",
 }
+# Modelos que se pueden elegir en la app (OpenRouter). Todos soportan tool calling, que los agentes necesitan.
+MODELOS_OPENROUTER = {
+    "anthropic/claude-sonnet-5": "Claude Sonnet 5 · predeterminado",
+    "anthropic/claude-sonnet-5.5": "Claude Sonnet 5.5",
+    "anthropic/claude-haiku-4.5": "Claude Haiku 4.5 · rápido",
+    "anthropic/claude-opus-5.5": "Claude Opus 5.5 · más capaz",
+    "openai/gpt-6-sol": "OpenAI GPT-6 Sol",
+    "openai/gpt-6-luna": "OpenAI GPT-6 Luna · económico",
+    "google/gemini-3.8-flash": "Google Gemini 3.8 Flash",
+    "deepseek/deepseek-v4-pro": "DeepSeek V4 Pro",
+}
 KEYS = {
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
@@ -41,10 +52,12 @@ def model_name(rapido: bool = False) -> str:
     return config.LLM_MODEL or DEFAULTS[config.LLM_PROVIDER]
 
 
-def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048, rapido: bool = False):
-    """rapido=True usa el modelo liviano (LLM_MODEL_RAPIDO) para enrutar y juzgar."""
+def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048, rapido: bool = False,
+                   modelo: str | None = None):
+    """rapido=True usa el modelo liviano (LLM_MODEL_RAPIDO) para enrutar y juzgar.
+    modelo: nombre elegido en la app; reemplaza a LLM_MODEL (no aplica a las llamadas rápidas)."""
     provider = config.LLM_PROVIDER
-    nombre = model_name(rapido)
+    nombre = model_name(True) if rapido else (modelo or model_name())
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
 

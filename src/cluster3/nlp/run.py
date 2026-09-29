@@ -68,6 +68,21 @@ def make_label_template(pre: pd.DataFrame, base: pd.DataFrame, n_c3: int = 40, n
     sample.sort_values(["cluster", "id_llamada"]).to_csv(LABELS_FILE, index=False)
 
 
+def _competidor(v) -> str | None:
+    """Normaliza el competidor (texto libre en el LLM): operador por nombre, 'otro operador (sin nombre)' o None."""
+    import re
+
+    if not isinstance(v, str) or not v.strip():
+        return None
+    t = v.strip().lower()
+    m = re.search(r"\b(tigo|movistar|wom|etb|une|directv|hughesnet)\b", t)
+    if m:
+        return m.group(1)
+    if re.fullmatch(r"(claro|no_identificado|ninguno|n/?a|none|null|\[nombre\])", t):
+        return None
+    return "otro operador (sin nombre)"
+
+
 def insights(final: pd.DataFrame) -> dict:
     ok = final[final["calidad_transcripcion"] != "sin_contenido"].copy()
     ok["grupo"] = np.where(ok["cluster"] == config.CLUSTER_CRITICO, "Cluster 3", "Otros clústeres")
@@ -85,7 +100,7 @@ def insights(final: pd.DataFrame) -> dict:
                                     reincidencia_pct=("reincidencia_mencionada", lambda s: s.mean() * 100),
                                     retenido_pct=("resultado", lambda s: (s == "retenido").mean() * 100)).round(2)
     sent.sort_values("llamadas", ascending=False).to_csv(config.OUT_TAB / "nlp_sentimiento_por_motivo_c3.csv")
-    comp = c3["competidor_mencionado"].value_counts().to_dict()
+    comp = c3["competidor_mencionado"].map(_competidor).value_counts().to_dict()
     res = {
         "llamadas_validas": int(len(ok)),
         "llamadas_c3": int(len(c3)),
@@ -153,6 +168,47 @@ def bridge(final: pd.DataFrame, clientes: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def hibrido(llm_df: pd.DataFrame, jdf: pd.DataFrame) -> pd.DataFrame:
+    """Método final elegido con el benchmark sobre 50 llamadas etiquetadas a mano (nlp_benchmark.csv):
+    Jev para motivo y sentimiento global (mejor kappa y correlación), LLM para urgencia, submotivo, evidencia
+    textual, trayectoria de sentimiento y acción sugerida (Jev no genera texto)."""
+    from cluster3.nlp.taxonomy import MOTIVOS
+
+    d = llm_df.merge(jdf[["id_llamada", "jev_motivo", "jev_motivo_prob", "jev_sentimiento"]], on="id_llamada", how="left")
+    d["motivo_llm"] = d["motivo"]
+    usa_jev = d["jev_motivo"].notna() & (d["calidad_transcripcion"] != "sin_contenido")
+    d.loc[usa_jev, "motivo"] = d.loc[usa_jev, "jev_motivo"]
+    # El submotivo del LLM solo se conserva si pertenece al motivo final
+    ok_sub = [s in MOTIVOS.get(m, {}).get("submotivos", {}) for m, s in zip(d["motivo"], d["submotivo"])]
+    d.loc[~pd.Series(ok_sub, index=d.index), "submotivo"] = "no_identificado"
+    d.loc[d["jev_sentimiento"].notna(), "sent_global"] = d["jev_sentimiento"]
+    # Filas sin resultado del LLM (respaldo con reglas) quedan marcadas para poder contarlas y reportarlas
+    d["metodo"] = np.where(d["metodo"] == "baseline_reglas", "hibrido_jev_reglas", "hibrido_jev_llm")
+    return d
+
+
+def _clasificar_llm(clf, target: pd.DataFrame, hilos: int = 5):
+    """Clasifica con el LLM en paralelo (las llamadas son independientes) y conserva el orden."""
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Lock
+
+    hechos, lock = [0], Lock()
+
+    def uno(r):
+        try:
+            out = clf.classify(r)
+        except Exception as e:  # una llamada fallida no detiene el lote
+            out = (None, {"id_llamada": int(r["id_llamada"]), "error": str(e)[:200]})
+        with lock:
+            hechos[0] += 1
+            print(f"[llm] llamada {hechos[0]}/{len(target)}", flush=True)
+        return out
+
+    with ThreadPoolExecutor(max_workers=hilos) as ex:
+        res = list(ex.map(uno, [r for _, r in target.iterrows()]))
+    return [a for a, _ in res if a is not None], [m for _, m in res]
+
+
 def run(use_llm: bool = False, use_jev: bool = False, solo_muestra: bool = False) -> dict:
     config.ensure_dirs()
     pre = preprocess_calls(load_llamadas())
@@ -162,7 +218,7 @@ def run(use_llm: bool = False, use_jev: bool = False, solo_muestra: bool = False
     write_jsonl(base_an, config.OUT_JSON / "llamadas_baseline.jsonl")
     base = flatten(base_an)
     make_label_template(pre, base)
-    preds = {"baseline": base[["id_llamada", "motivo", "urgencia"]]}
+    preds = {"baseline": base[["id_llamada", "motivo", "urgencia", "sent_global"]].rename(columns={"sent_global": "sentimiento"})}
     final = base
 
     target = pre
@@ -172,28 +228,42 @@ def run(use_llm: bool = False, use_jev: bool = False, solo_muestra: bool = False
     if use_llm:
         from cluster3.nlp.llm_classifier import LLMClassifier
 
+        from cluster3.nlp.schema import CallAnalysis
+
         clf = LLMClassifier(pre)
-        llm_an, metas = [], []
-        for _, r in target.iterrows():
-            try:
-                a, meta = clf.classify(r)
-                llm_an.append(a)
-                metas.append(meta)
-            except Exception as e:  # una llamada fallida no detiene el lote
-                metas.append({"id_llamada": int(r["id_llamada"]), "error": str(e)[:200]})
-        write_jsonl(llm_an, config.OUT_JSON / "llamadas_llm.jsonl")
-        pd.DataFrame(metas).to_csv(config.OUT_TAB / "llm_trazas.csv", index=False)
+        # Reanudar: en la corrida completa se reutilizan las llamadas que el LLM ya clasificó con éxito
+        # (por ejemplo, si una corrida se cortó por falta de créditos); solo se clasifican las que faltan.
+        previas, trazas_prev = [], pd.DataFrame()
+        f_llm, f_traz = config.OUT_JSON / "llamadas_llm.jsonl", config.OUT_TAB / "llm_trazas.csv"
+        if not solo_muestra and f_llm.exists():
+            previas = [CallAnalysis.model_validate_json(x) for x in f_llm.read_text(encoding="utf-8").splitlines() if x]
+            if f_traz.exists():
+                trazas_prev = pd.read_csv(f_traz)
+                if "error" in trazas_prev:
+                    trazas_prev = trazas_prev[trazas_prev["error"].isna()]
+        hechas = {a.id_llamada for a in previas}
+        faltan = target[~target["id_llamada"].isin(hechas)]
+        if hechas:
+            print(f"[llm] {len(hechas)} llamadas ya clasificadas; faltan {len(faltan)}", flush=True)
+        nuevas, metas = _clasificar_llm(clf, faltan) if len(faltan) else ([], [])
+        llm_an = previas + nuevas
+        write_jsonl(llm_an, f_llm)
+        pd.concat([trazas_prev, pd.DataFrame(metas)], ignore_index=True).to_csv(f_traz, index=False)
         llm_df = flatten(llm_an)
-        preds["llm"] = llm_df[["id_llamada", "motivo", "urgencia"]]
+        preds["llm"] = llm_df[["id_llamada", "motivo", "urgencia", "sent_global"]].rename(columns={"sent_global": "sentimiento"})
         if not solo_muestra:
-            final = llm_df
+            # Respaldo: una llamada sin resultado del LLM conserva la fila de reglas (no se descarta)
+            sin_llm = base[~base["id_llamada"].isin(llm_df["id_llamada"])]
+            final = pd.concat([llm_df, sin_llm], ignore_index=True)
 
     if use_jev:
         from cluster3.nlp.jev_classifier import JevClassifier
 
         jev = JevClassifier()
         jrows = []
-        for _, r in target.iterrows():
+        for i, (_, r) in enumerate(target.iterrows(), 1):
+            if i % 25 == 0 or i == len(target):
+                print(f"[jev] llamada {i}/{len(target)}", flush=True)
             try:
                 jrows.append(jev.classify(r))
             except Exception as e:
@@ -201,14 +271,24 @@ def run(use_llm: bool = False, use_jev: bool = False, solo_muestra: bool = False
         jdf = pd.DataFrame(jrows)
         jdf.to_csv(config.OUT_TAB / "jev_resultados.csv", index=False)
         if "jev_motivo" in jdf:
-            preds["jev"] = jdf.rename(columns={"jev_motivo": "motivo", "jev_urgencia": "urgencia"})[["id_llamada", "motivo", "urgencia"]]
+            preds["jev"] = jdf.rename(columns={"jev_motivo": "motivo", "jev_urgencia": "urgencia", "jev_sentimiento": "sentimiento"})[["id_llamada", "motivo", "urgencia", "sentimiento"]]
             if not solo_muestra:
-                final = final.merge(jdf, on="id_llamada", how="left")
+                final = hibrido(final, jdf) if use_llm else final.merge(jdf, on="id_llamada", how="left")
 
+    if use_llm and use_jev and not solo_muestra:
+        preds["hibrido"] = final[["id_llamada", "motivo", "urgencia", "sent_global"]].rename(
+            columns={"sent_global": "sentimiento"})
+        final.to_parquet(config.T_LLAMADAS_HIBRIDO, index=False)
+        final.to_json(config.OUT_JSON / "llamadas_final.jsonl", orient="records", lines=True, force_ascii=False)
+    elif not use_llm and not use_jev and config.T_LLAMADAS_HIBRIDO.exists():
+        print("[nlp] Se reutiliza la clasificación híbrida (Jev + LLM) ya calculada; "
+              "para recalcularla: python -m cluster3.nlp.run --llm --jev", flush=True)
+        final = pd.read_parquet(config.T_LLAMADAS_HIBRIDO)
     final.to_parquet(config.T_LLAMADAS_ANALISIS, index=False)
     bench = evaluate(preds)
     ins = insights(final)
-    ins["metodo_final"] = final["metodo"].iloc[0]
+    ins["metodo_final"] = final["metodo"].mode()[0]
+    ins["metodos_por_llamada"] = {str(k): int(v) for k, v in final["metodo"].value_counts().items()}
     ins["preprocesamiento"] = {
         "roles_corregidos": int(pre["roles_corregidos"].sum()),
         "pii_reemplazos": int(pre["pii_reemplazos"].sum()),

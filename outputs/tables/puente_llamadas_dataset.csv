@@ -1,8 +1,8 @@
 motivo_llamadas,pct_llamadas_c3,variable_dataset,pct_clientes_c3,intencion_con_senal_pct,intencion_sin_senal_pct,churn_con_senal_pct,churn_sin_senal_pct
-precio_facturacion,46.2,Renta subió más de 5 % vs hace 6 meses,25.9,14.3,21.9,0.87,0.4
-servicios_no_usados,2.0,Tiene equipos adicionales,3.8,20.8,19.9,7.78,0.23
-falla_tecnica,15.0,Llamadas técnicas negativas o downtime > 0,16.3,14.1,21.0,0.25,0.57
-competencia,3.7,Zona de alta competencia o competencia mejor,71.4,19.9,19.9,0.56,0.42
-traslado_cobertura,6.6,Tiene marca de traslado,1.1,16.1,19.9,0.46,0.52
-atencion_servicio,6.0,2 o más reclamos en el mes,22.3,11.7,22.3,1.25,0.31
-situacion_economica,0.7,Score crediticio en el quintil más bajo,19.8,32.7,16.7,0.53,0.52
+precio_facturacion,24.3,Renta subió más de 5 % vs hace 6 meses,25.9,14.3,21.9,0.87,0.4
+servicios_no_usados,10.0,Tiene equipos adicionales,3.8,20.8,19.9,7.78,0.23
+falla_tecnica,10.3,Llamadas técnicas negativas o downtime > 0,16.3,14.1,21.0,0.25,0.57
+competencia,5.0,Zona de alta competencia o competencia mejor,71.4,19.9,19.9,0.56,0.42
+traslado_cobertura,7.6,Tiene marca de traslado,1.1,16.1,19.9,0.46,0.52
+atencion_servicio,8.3,2 o más reclamos en el mes,22.3,11.7,22.3,1.25,0.31
+situacion_economica,6.3,Score crediticio en el quintil más bajo,19.8,32.7,16.7,0.53,0.52

@@ -83,20 +83,21 @@ Los Excel originales van en `data/raw/` (no están en git).
 - Resultados actuales: intención AUC 0,797, LIFT@10 3,4; churn AUC 0,974, LIFT@10 9,2 (96 de 104 bajas en el decil 1).
 - `BAN_CAMPANA_VENTA` se excluyó (misma campaña del mes que las demás `BAN_CAMPANA_*`): intención AUC 0,813 → 0,797.
 - Accionables proactivos: solo se contacta a clientes con valor esperado positivo (`_rentables` en `actions.py`).
-- NLP (reglas): precio y facturación 46,2 % de las llamadas del Cluster 3; Tigo mencionado en 34 llamadas.
+- NLP híbrido (Jev motivo y sentimiento + LLM urgencia, submotivo y evidencia), elegido con 50 llamadas etiquetadas a
+  mano: precio y facturación 24,3 % del Cluster 3, sin motivo claro 28,2 %, urgencia alta 54,2 %.
+- "Tigo en 34 llamadas" era un falso positivo de la regla ("contigo"): no hay operadores nombrados en las
+  transcripciones. No volver a usarlo.
 
 ## Estado
 
-Hecho: pipeline completo, modelos, NLP con reglas, accionables, docs, grafo multiagente con evals (offline 100 %),
-app Streamlit, archivos de despliegue, pruebas.
+Hecho: pipeline completo, modelos, NLP híbrido validado contra 50 etiquetas humanas, accionables, docs, grafo
+multiagente (conversación, streaming, selector de modelo) con evals (offline 100 %), app Streamlit, repo público.
 
 Pendiente, en este orden:
-1. Crear el repo público `prueba-claro-cluster-3` en GitHub y el primer commit (verificar que ningún insumo de `data/` entra).
-2. Etiquetar las 50 llamadas (`cluster3.nlp.etiquetar`) y correr el benchmark reglas vs LLM vs Jev.
-3. Probar el grafo en modo `llm` con clave real y correr `agents.evals` con juez.
-4. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
-5. Preparar la presentación para la sustentación (la app es la demo en vivo).
-6. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
+1. Correr `agents.evals` en modo llm con juez.
+2. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
+3. Preparar la presentación para la sustentación (la app es la demo en vivo).
+4. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
 
 ## Confidencialidad
 
