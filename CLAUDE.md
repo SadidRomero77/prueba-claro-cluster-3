@@ -91,13 +91,13 @@ Los Excel originales van en `data/raw/` (no están en git).
 ## Estado
 
 Hecho: pipeline completo, modelos, NLP híbrido validado contra 50 etiquetas humanas, accionables, docs, grafo
-multiagente (conversación, streaming, selector de modelo) con evals (offline 100 %), app Streamlit, repo público.
+multiagente (conversación, streaming, selector de modelo) con evals (offline 100 %; con LLM: ruta 100 %,
+cifras respaldadas 92 %, juez 4,75/5 en fidelidad), app Streamlit guiada, repo público, deck en Artifact Slides.
 
 Pendiente, en este orden:
-1. Correr `agents.evals` en modo llm con juez.
-2. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
-3. Preparar la presentación para la sustentación (la app es la demo en vivo).
-4. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
+1. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
+2. Preparar la presentación para la sustentación (la app es la demo en vivo).
+3. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
 
 ## Confidencialidad
 

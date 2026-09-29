@@ -20,6 +20,7 @@ if str(_SRC) not in sys.path:
 import os  # noqa: E402
 
 import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 
@@ -39,7 +40,7 @@ if os.getenv("CLUSTER3_VOLUME"):
 from cluster3 import config  # noqa: E402
 from cluster3 import llm as llm_factory  # noqa: E402
 from cluster3.agents import prompts as P  # noqa: E402
-from cluster3.eda.profile import BLUE, GRID, INK, INK2, ORANGE, _slug  # noqa: E402
+from cluster3.eda.profile import BLUE, GRID, INK, INK2, ORANGE  # noqa: E402
 
 st.set_page_config(page_title="Cluster 3 · Churn Claro", page_icon="📉", layout="wide")
 
@@ -104,6 +105,16 @@ h1, h2, h3 {{ letter-spacing: -0.01em; }}
 [data-testid="stChatMessage"] {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px;
   padding: 10px 14px; margin-bottom: 8px; }}
 [data-testid="stMetricValue"] {{ font-weight: 700; }}
+.guide {{ background: var(--blue-soft); border: 1px solid #cfe0f6; border-left: 4px solid var(--blue);
+  border-radius: 12px; padding: 12px 16px; margin: 4px 0 14px; }}
+.guide .gt {{ font-weight: 650; font-size: 13.5px; color: #1d5aa3; margin-bottom: 3px; }}
+.guide .gx {{ font-size: 13.5px; color: var(--ink); line-height: 1.5; }}
+.guide .gl {{ font-size: 12.5px; color: var(--ink2); margin-top: 6px; }}
+.lectura {{ font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--grid);
+  border-radius: 12px; padding: 10px 14px; margin: 6px 0 10px; }}
+.quote {{ border-left: 3px solid var(--orange); background: var(--surface); padding: 8px 12px; margin: 6px 0;
+  border-radius: 0 10px 10px 0; font-size: 13.5px; color: var(--ink); font-style: italic; }}
+.quote .qm {{ font-style: normal; font-size: 11.5px; color: var(--muted); margin-top: 4px; }}
 div[data-testid="stExpander"] details {{ border-radius: 12px; border-color: var(--grid); background: var(--surface); }}
 </style>
 """
@@ -180,6 +191,63 @@ def cards(items: list[tuple[str, str, str]], por_fila: int = 3) -> None:
             col.markdown(f'<div class="card"><div class="ic">{ic}</div><div class="ct">{_e(t)}</div>'
                          f'<div class="cx">{x}</div></div>', unsafe_allow_html=True)
         st.write("")
+
+
+def _md(x: str) -> str:
+    """Escapa HTML y convierte **texto** en negrita."""
+    x = _e(x)
+    while "**" in x:
+        x = x.replace("**", "<b>", 1).replace("**", "</b>", 1)
+    return x
+
+
+def guia(que: str, como: str | None = None) -> None:
+    """Caja "Qué estás viendo" al inicio de cada pestaña: qué muestra y cómo leerlo."""
+    extra = f'<div class="gl">📖 <b>Cómo leerlo:</b> {_md(como)}</div>' if como else ""
+    st.markdown(f'<div class="guide"><div class="gt">💡 Qué estás viendo</div><div class="gx">{_md(que)}</div>{extra}'
+                "</div>", unsafe_allow_html=True)
+
+
+def lectura(texto: str) -> None:
+    """Conclusión en una frase, calculada con los datos que se están mostrando."""
+    st.markdown(f'<div class="lectura">👉 {_md(texto)}</div>', unsafe_allow_html=True)
+
+
+def barras_segmento(d: pd.DataFrame, col: str, color: str, base: float, titulo: str) -> alt.Chart:
+    """Barras por nivel del segmento con una línea en el promedio del Cluster 3 (niveles < 200 clientes, tenues)."""
+    orden = d["nivel"].astype(str).tolist()
+    datos = d.assign(nivel=d["nivel"].astype(str), confiable=d["clientes"] >= 200)
+    barras = alt.Chart(datos).mark_bar(cornerRadiusEnd=4, color=color).encode(
+        y=alt.Y("nivel:N", sort=orden, title=None,
+                axis=alt.Axis(labelColor=INK2, ticks=False, domain=False, labelOverlap=False, labelLimit=160)),
+        x=alt.X(f"{col}:Q", title=titulo, axis=alt.Axis(gridColor=GRID, labelColor=INK2, titleColor=INK2,
+                                                        domain=False, ticks=False)),
+        opacity=alt.condition("datum.confiable", alt.value(1), alt.value(0.35)),
+        tooltip=[alt.Tooltip("nivel:N", title="Nivel"), alt.Tooltip(f"{col}:Q", title=titulo, format=".2f"),
+                 alt.Tooltip("clientes:Q", title="Clientes", format=",")],
+    )
+    regla = alt.Chart(pd.DataFrame({"v": [base]})).mark_rule(color=INK2, strokeDash=[4, 3]).encode(
+        x="v:Q", tooltip=[alt.Tooltip("v:Q", title="Promedio del Cluster 3", format=".2f")])
+    return (barras + regla).properties(height=max(180, 44 * len(d))).configure_view(stroke=None) \
+        .configure(background="transparent")
+
+
+def curva_captura(lt: pd.DataFrame, decil: int, color: str, etiqueta: str) -> alt.Chart:
+    """Captura acumulada por % de clientes contactados, frente a contactar al azar; resalta el punto elegido."""
+    d = lt.assign(pct_contactado=lt["decil"] * 10, captura=lt["captura_acumulada"] * 100,
+                  azar=lt["decil"] * 10, elegido=lt["decil"] == decil)
+    ejes = dict(gridColor=GRID, labelColor=INK2, titleColor=INK2, domain=False, ticks=False)
+    x = alt.X("pct_contactado:Q", title="% de clientes contactados (de mayor a menor riesgo)",
+              scale=alt.Scale(domain=[0, 100]), axis=alt.Axis(**ejes))
+    y = alt.Y("captura:Q", title=f"% de {etiqueta} capturadas", scale=alt.Scale(domain=[0, 100]), axis=alt.Axis(**ejes))
+    tt = [alt.Tooltip("pct_contactado:Q", title="% contactado"), alt.Tooltip("captura:Q", title="% capturado", format=".1f")]
+    modelo = alt.Chart(d).mark_line(color=color, strokeWidth=2, point=alt.OverlayMarkDef(size=60, color=color)) \
+        .encode(x=x, y=y, tooltip=tt)
+    azar = alt.Chart(d).mark_line(color=INK2, strokeDash=[4, 3], strokeWidth=1.5).encode(x=x, y=alt.Y("azar:Q"))
+    punto = alt.Chart(d[d["elegido"]]).mark_point(size=260, color=color, filled=False, strokeWidth=3) \
+        .encode(x=x, y=y, tooltip=tt)
+    return (azar + modelo + punto).properties(height=300).configure_view(stroke=None) \
+        .configure(background="transparent")
 
 
 def pill(texto: str, tono: str = "gray") -> str:
@@ -279,6 +347,10 @@ tabs = st.tabs(["🏠 Resumen", "🧩 Segmentos", "🤖 Modelo ML", "🎧 Voz de
 # --------------------------------------------------------------------------- 1. Resumen
 with tabs[0]:
     veces = kpis["churn_si_intencion"] / kpis["churn_no_intencion"] if kpis["churn_no_intencion"] else 0
+    guia("La foto del Cluster 3 en el corte 202508: cuántos clientes piden cancelar, cuántos se van de verdad y cuánta "
+         "renta está en juego. Abajo están los hallazgos clave y la ruta para recorrer el panel.",
+         "**azul** = intención de cancelar (el cliente llamó a pedir la baja: alerta temprana). "
+         "**naranja** = churn (el cliente efectivamente se fue).")
     kpis_row([
         ("Clientes del Cluster 3", _n(kpis["clientes"]), "periodo 202508", ""),
         ("Intención de cancelar", _pct(kpis["intencion_tasa"]), f"{_n(kpis['intencion_n'])} clientes", "blue"),
@@ -299,14 +371,14 @@ with tabs[0]:
     section("Lo que hay que saber", "Hallazgos principales, calculados desde los datos")
     a1 = _csv("accionables.csv")
     fuga = _csv("comparacion_fuga.csv")
+    mc3 = nlp.get("motivos_c3_pct", {})
     hallazgos = [
         ("📞", "Muchos amenazan, pocos se van",
          f"El **{_pct(kpis['intencion_tasa'])}** llamó a cancelar y solo el **{_pct(kpis['churn_tasa'], 2)}** se fue. "
          f"Quien llama tiene **{_d(veces, 1)}×** más riesgo de irse."),
-        ("💸", "El precio manda",
-         f"Precio y facturación explican el **{_pct(nlp.get('motivos_c3_pct', {}).get('precio_facturacion', 0) / 100)}** "
-         f"de las llamadas del Cluster 3 (vs **{_pct(nlp.get('motivos_otros_pct', {}).get('precio_facturacion', 0) / 100)}** "
-         "en otros clústeres)."),
+        ("💸", "El precio es el motivo número uno",
+         f"Precio y facturación explica el **{_pct(mc3.get('precio_facturacion', 0) / 100)}** de las llamadas del "
+         f"Cluster 3; en el **{_pct(mc3.get('otro', 0) / 100)}** el cliente no deja claro el motivo."),
     ]
     if ch:
         top10 = ch.get("matriz_top10", {})
@@ -317,7 +389,7 @@ with tabs[0]:
         auc_fuga = fuga.loc[fuga["variables"] == "con fuga", "auc"].max()
         hallazgos.append(("🧯", "Se evitó la trampa de la fuga",
                           f"Con variables que ya contienen el resultado, el modelo daba AUC **{_d(auc_fuga, 2)}**. "
-                          "Se excluyeron: estado de la cuenta, planes de TV con sufijo I, reincidencias y retención."))
+                          "Se excluyeron: estado de la cuenta, planes de TV con sufijo I, reincidencias y campañas."))
     if nlp.get("urgencia_c3_pct"):
         hallazgos.append(("🔁", "Llaman con urgencia y ya habían reclamado",
                           f"El **{_pct(nlp['urgencia_c3_pct'].get('alta', 0) / 100)}** de las llamadas del Cluster 3 "
@@ -330,35 +402,46 @@ with tabs[0]:
                           "en el escenario base."))
     cards(hallazgos)
 
-    mot = _csv("nlp_motivos_c3_vs_otros.csv")
-    if mot is not None:
-        section("Por qué llaman a cancelar", "% de llamadas por motivo · Cluster 3 frente a los demás clústeres")
-        st.altair_chart(barras_agrupadas(mot, "motivo", ["Cluster 3", "Otros clústeres"], [BLUE, ORANGE],
-                                         "% de llamadas"), width="stretch")
+    section("Cómo recorrer el panel", "Cada pestaña responde una pregunta de negocio")
+    cards([
+        ("🧩", "Segmentos · ¿quiénes?", "Qué grupos de clientes tienen más intención y más churn."),
+        ("🤖", "Modelo ML · ¿a quién llamar?", "Cuántas bajas se capturan contactando a pocos clientes."),
+        ("🎧", "Voz del cliente · ¿por qué?", "Motivos, urgencia y frases reales de las llamadas."),
+        ("🎯", "Accionables · ¿qué hacer?", "Acciones priorizadas y su impacto en pesos por escenario."),
+        ("💬", "Agente · pregúntale", "Conversa con los datos; cada cifra viene de una herramienta."),
+        ("🧪", "Evaluación · ¿es confiable?", "Cómo se validaron el NLP y el sistema de agentes."),
+    ])
 
 # --------------------------------------------------------------------------- 2. Segmentos
 with tabs[1]:
     seg = _csv("segmentos_cluster3.csv")
     if seg is not None:
-        section("Churn e intención por segmento", "Elige una dimensión; cada gráfico lee juntas las dos variables objetivo")
+        guia("Cómo cambian la intención de cancelar y el churn según una característica del cliente (score crediticio, "
+             "antigüedad, reclamos, red…). Sirve para saber **a quién** apuntar cada acción.",
+             "cada barra es un grupo; la línea punteada es el promedio del Cluster 3. Si la barra la supera, ese grupo "
+             "está en mayor riesgo. Las barras tenues tienen menos de 200 clientes: son poco confiables. "
+             "Pasa el mouse para ver el detalle.")
         nombres = list(dict.fromkeys(seg["segmento"]))
-        elegido = st.selectbox("Segmento", nombres,
+        elegido = st.selectbox("Elige una característica", nombres,
                                index=nombres.index("Variación de renta vs 6 meses")
                                if "Variación de renta vs 6 meses" in nombres else 0)
         d = seg[seg["segmento"] == elegido].drop(columns="segmento")
+        base_i, base_c = kpis["intencion_tasa"] * 100, kpis["churn_tasa"] * 100
         grandes = d[d["clientes"] >= 200]
         if len(grandes):
             top_i, top_c = grandes.loc[grandes["intencion_pct"].idxmax()], grandes.loc[grandes["churn_pct"].idxmax()]
-            kpis_row([
-                ("Mayor intención", str(top_i["nivel"]), f"{_d(top_i['intencion_pct'], 1)} % · {_n(top_i['clientes'])} clientes", "blue"),
-                ("Mayor churn", str(top_c["nivel"]), f"{_d(top_c['churn_pct'], 2)} % · {_n(top_c['clientes'])} clientes", "orange"),
-                ("Niveles", _n(len(d)), "con 200 o más clientes: " + _n(len(grandes)), ""),
-            ])
-            st.write("")
-        col1, col2 = st.columns([3, 2])
-        with col1:
-            _fig(f"segmento_{_slug(elegido)}.png")
-        with col2:
+            lectura(f"En **{elegido}**, el grupo **{top_i['nivel']}** tiene la mayor intención "
+                    f"(**{_d(top_i['intencion_pct'], 1)} %** frente a {_d(base_i, 1)} % del Cluster 3) y el grupo "
+                    f"**{top_c['nivel']}** el mayor churn (**{_d(top_c['churn_pct'], 2)} %** frente a "
+                    f"{_d(base_c, 2)} %).")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Intención de cancelar (%)**")
+            st.altair_chart(barras_segmento(d, "intencion_pct", BLUE, base_i, "Intención %"), width="stretch")
+        with c2:
+            st.markdown("**Churn (%)**")
+            st.altair_chart(barras_segmento(d, "churn_pct", ORANGE, base_c, "Churn %"), width="stretch")
+        with st.expander("Ver la tabla de este segmento"):
             st.dataframe(d.rename(columns={"nivel": "Nivel", "clientes": "Clientes", "churn_pct": "Churn %",
                                            "intencion_pct": "Intención %", "arpu_mediano": "ARPU mediano"}),
                          hide_index=True, width="stretch")
@@ -368,8 +451,12 @@ with tabs[1]:
 # --------------------------------------------------------------------------- 3. Modelo ML
 with tabs[2]:
     if metricas:
-        section("Modelo predictivo en dos etapas",
-                "LightGBM · validación cruzada estratificada 3×5 · probabilidades calibradas y fuera de muestra")
+        guia("Dos modelos de machine learning (LightGBM) que ordenan a los 20.000 clientes por riesgo: uno para la "
+             "**intención de cancelar** (alerta temprana) y otro para el **churn** (baja efectiva). Se validaron con "
+             "datos que el modelo no vio y sin variables que ya contienen la respuesta (fuga).",
+             "**AUC** = qué tan bien ordena el riesgo (0,5 es azar, 1 es perfecto). **Lift** = cuántas veces más "
+             "eventos hay en el grupo de mayor riesgo que al azar. Usa el simulador para ver cuántos casos capturas "
+             "según a cuántos clientes contactes.")
         m1, m2 = st.columns(2)
         for col, key, titulo, tono in [(m1, "intencion", "Intención de cancelar · alerta temprana", "blue"),
                                        (m2, "churn", "Churn · baja efectiva", "orange")]:
@@ -381,34 +468,42 @@ with tabs[2]:
                 ic = m.get("auc_oof_ic95")
                 kpis_row([
                     ("AUC", _d(m["auc_cv_media"]), f"IC 95 %: {_d(ic[0])}–{_d(ic[1])}" if ic else "", tono),
-                    ("PR-AUC", _d(m["pr_auc"]), f"base {_d(m['tasa_base'])}", tono),
-                    ("Lift decil 1", f"{_d(m['lift_10'], 1)}×", f"{_n(m['positivos'])} positivos", tono),
+                    ("PR-AUC", _d(m["pr_auc"]), f"azar: {_d(m['tasa_base'])}", tono),
+                    ("Lift decil 1", f"{_d(m['lift_10'], 1)}×", f"{_n(m['positivos'])} casos reales", tono),
                 ])
+
+        section("Simulador: ¿a cuántos clientes contacto?",
+                "Se contacta primero a quien el modelo ve más riesgoso; la línea punteada es contactar al azar")
+        s1, s2 = st.columns([1, 2])
+        with s1:
+            cual = st.radio("Modelo", ["Churn", "Intención de cancelar"], horizontal=True)
+            key = "churn" if cual == "Churn" else "intencion"
+            pct = st.slider("% de clientes a contactar", 10, 100, 10, step=10)
+        lt = _csv(f"lift_{key}.csv")
+        if lt is not None:
+            dec = pct // 10
+            fila = lt[lt["decil"] == dec].iloc[0]
+            contactados = int(lt.loc[lt["decil"] <= dec, "clientes"].sum())
+            capturados = int(lt.loc[lt["decil"] <= dec, "positivos"].sum())
+            total = int(lt["positivos"].sum())
+            etiqueta = "bajas" if key == "churn" else "intenciones"
+            with s1:
+                kpis_row([("Clientes a contactar", _n(contactados), f"{pct} % del Cluster 3", "")])
                 st.write("")
+                kpis_row([(f"{etiqueta.capitalize()} capturadas", f"{_n(capturados)} de {_n(total)}",
+                           f"{_pct(fila['captura_acumulada'], 0)} del total", "orange" if key == "churn" else "blue")])
+            with s2:
+                st.altair_chart(curva_captura(lt, dec, ORANGE if key == "churn" else BLUE, etiqueta), width="stretch")
+            lectura(f"Contactando al **{pct} %** de mayor riesgo ({_n(contactados)} clientes) se llega al "
+                    f"**{_pct(fila['captura_acumulada'], 0)}** de las {etiqueta}: **{_d(fila['lift_acumulado'], 1)}×** "
+                    "más que contactar al azar.")
+
+        section("Qué variables explican el riesgo", "SHAP: cuánto empuja cada variable el riesgo, promedio entre folds")
+        st.caption("Barra más larga = variable más influyente. La etiqueta dice si un valor alto sube o baja el riesgo.")
+        g1, g2 = st.columns(2)
+        for col, key in [(g1, "intencion"), (g2, "churn")]:
+            with col:
                 _fig(f"shap_{key}.png")
-                with st.expander("Curva de ganancia y notas"):
-                    _fig(f"ganancia_{key}.png")
-                    for nota in m.get("notas", []):
-                        st.caption(f"· {nota}")
-
-        section("Lift por decil", "Qué tanto se concentra el evento en cada decil de riesgo (1 = mayor riesgo)")
-        cl1, cl2 = st.columns(2)
-        for col, key, color, titulo in [(cl1, "intencion", BLUE, "Intención"), (cl2, "churn", ORANGE, "Churn")]:
-            lt = _csv(f"lift_{key}.csv")
-            if lt is not None:
-                with col:
-                    st.markdown(f"**{titulo}**")
-                    st.altair_chart(barras_simples(lt, "decil", "lift", color, "Decil", "Lift (× tasa base)", ".2f"),
-                                    width="stretch")
-
-        section("Por qué se excluyeron variables", "Con fuga de información las métricas son perfectas e inútiles")
-        fuga = _csv("comparacion_fuga.csv")
-        if fuga is not None:
-            st.dataframe(fuga, hide_index=True, width="stretch")
-        sens = metricas.get("sensibilidad_churn_sin_equipos")
-        if sens:
-            st.caption(f"Sensibilidad: churn sin equipos adicionales ni UltraWiFi → AUC {_d(sens['auc'], 3)}, "
-                       f"lift decil 1 {_d(sens['lift_10'], 1)}×.")
 
         cat1, cat2 = _csv("importancia_categoria_intencion.csv"), _csv("importancia_categoria_churn.csv")
         if cat1 is not None and cat2 is not None:
@@ -417,78 +512,165 @@ with tabs[2]:
             comp = comp.rename(columns={"pct_importancia intención": "Intención", "pct_importancia churn": "Churn"})
             st.altair_chart(barras_agrupadas(comp, "categoria", ["Intención", "Churn"], [BLUE, ORANGE],
                                              "% de la importancia", alto=380), width="stretch")
-        bal = _csv("balance_importancia_targets.csv")
-        if bal is not None:
-            with st.expander("Balance de importancia entre los dos objetivos"):
+
+        section("Por qué se excluyeron variables", "Con fuga de información las métricas son perfectas e inútiles")
+        fuga = _csv("comparacion_fuga.csv")
+        if fuga is not None:
+            fila_f = fuga[fuga["variables"] == "con fuga"]
+            if len(fila_f):
+                lectura(f"Con las variables que ya contienen el resultado, el AUC llegaba a **{_d(fila_f['auc'].max(), 2)}**: "
+                        "el modelo no anticipaba nada, solo copiaba la respuesta. Por eso se excluyeron.")
+            st.dataframe(fuga, hide_index=True, width="stretch")
+        with st.expander("Curvas de ganancia, notas y balance de importancia"):
+            for key in ["intencion", "churn"]:
+                _fig(f"ganancia_{key}.png")
+                for nota in metricas.get(key, {}).get("notas", []):
+                    st.caption(f"· {nota}")
+            sens = metricas.get("sensibilidad_churn_sin_equipos")
+            if sens:
+                st.caption(f"Sensibilidad: churn sin equipos adicionales ni UltraWiFi → AUC {_d(sens['auc'], 3)}, "
+                           f"lift decil 1 {_d(sens['lift_10'], 1)}×.")
+            bal = _csv("balance_importancia_targets.csv")
+            if bal is not None:
                 st.dataframe(bal, hide_index=True, width="stretch")
 
 # --------------------------------------------------------------------------- 4. Voz del cliente
 with tabs[3]:
     if nlp:
-        section("Voz del cliente", "Análisis de las llamadas de cancelación: motivo, urgencia y sentimiento")
+        bench = _csv("nlp_benchmark.csv")
+        precision = ""
+        if bench is not None and "hibrido" in set(bench["metodo"]):
+            b = bench[bench["metodo"] == "hibrido"].set_index("campo")
+            precision = (f" El método se validó contra {_n(b['n'].max())} llamadas etiquetadas a mano: acierta el "
+                         f"motivo en el **{_pct(b.loc['motivo', 'exactitud'], 0)}** y la urgencia en el "
+                         f"**{_pct(b.loc['urgencia', 'exactitud'], 0)}** de los casos.")
+        guia("Qué dicen los clientes cuando llaman a cancelar. Cada una de las 500 llamadas se clasificó por motivo, "
+             "urgencia y sentimiento con un método híbrido: Jev para motivo y sentimiento, y un LLM para urgencia, "
+             "submotivo y la cita textual." + precision,
+             "empieza por el gráfico de motivos y luego elige un motivo en el explorador para ver su urgencia, cómo "
+             "termina la llamada y frases reales de clientes.")
+        mc3 = nlp.get("motivos_c3_pct", {})
         kpis_row([
             ("Llamadas del Cluster 3", _n(nlp.get("llamadas_c3", 0)), f"de {_n(nlp.get('llamadas_validas', 0))} válidas", ""),
-            ("Precio y facturación", _pct(nlp.get("motivos_c3_pct", {}).get("precio_facturacion", 0) / 100),
-             "motivo principal", "blue"),
+            ("Precio y facturación", _pct(mc3.get("precio_facturacion", 0) / 100), "motivo identificable n.º 1", "blue"),
             ("Urgencia alta", _pct(nlp.get("urgencia_c3_pct", {}).get("alta", 0) / 100), "pide la baja ya", "orange"),
-            ("Sentimiento empeora", _pct(nlp.get("sentimiento_c3", {}).get("empeora_pct", 0) / 100),
-             "del inicio al final de la llamada", ""),
-            ("Reclamo previo mencionado", _pct(nlp.get("reincidencia_c3_pct", 0) / 100), "reincidencia en la llamada", ""),
+            ("Reclamo previo mencionado", _pct(nlp.get("reincidencia_c3_pct", 0) / 100), "ya había reclamado", ""),
+            ("Retenidos en la llamada", _pct(nlp.get("resultado_c3_pct", {}).get("retenido", 0) / 100),
+             "aceptan una oferta", ""),
         ])
         mot = _csv("nlp_motivos_c3_vs_otros.csv")
         if mot is not None:
-            section("Motivos: Cluster 3 frente al resto")
-            col1, col2 = st.columns([3, 2])
-            with col1:
-                st.altair_chart(barras_agrupadas(mot, "motivo", ["Cluster 3", "Otros clústeres"], [BLUE, ORANGE],
-                                                 "% de llamadas"), width="stretch")
-            with col2:
-                st.dataframe(mot, hide_index=True, width="stretch")
-        st.caption(f"Método: {nlp.get('metodo_final', 'baseline_reglas')} · "
-                   f"preprocesamiento: {json.dumps(nlp.get('preprocesamiento', {}), ensure_ascii=False)}")
-        sub = _csv("nlp_submotivos_c3.csv")
-        if sub is not None:
-            with st.expander("Submotivos"):
-                st.dataframe(sub, hide_index=True, width="stretch")
+            section("¿Por qué llaman a cancelar?", "% de llamadas por motivo · Cluster 3 frente a los demás clústeres")
+            st.altair_chart(barras_agrupadas(mot, "motivo", ["Cluster 3", "Otros clústeres"], [BLUE, ORANGE],
+                                             "% de llamadas"), width="stretch")
+            idx = mot.set_index("motivo")
+            dif = idx.drop(index="otro", errors="ignore")["diferencia_pp"].idxmax()
+            lectura(f"Lo más característico del Cluster 3 frente al resto es **{dif}** "
+                    f"({_d(idx.loc[dif, 'Cluster 3'], 1)} % vs {_d(idx.loc[dif, 'Otros clústeres'], 1)} %).")
+
+        if config.T_LLAMADAS_ANALISIS.exists():
+            ll = pd.read_parquet(config.T_LLAMADAS_ANALISIS)
+            c3 = ll[(ll["cluster"] == config.CLUSTER_CRITICO) & (ll["calidad_transcripcion"] != "sin_contenido")]
+            section("Explorador por motivo", "Elige un motivo para ver cómo son esas llamadas en el Cluster 3")
+            opciones_mot = c3["motivo"].value_counts().index.tolist()
+            motivo = st.selectbox("Motivo", opciones_mot,
+                                  index=opciones_mot.index("precio_facturacion") if "precio_facturacion" in opciones_mot else 0)
+            x = c3[c3["motivo"] == motivo]
+            kpis_row([
+                ("Llamadas", _n(len(x)), f"{_pct(len(x) / len(c3))} del Cluster 3", "blue"),
+                ("Urgencia alta", _pct((x["urgencia"] == "alta").mean()), "", "orange"),
+                ("Retenidos", _pct((x["resultado"] == "retenido").mean()), "", ""),
+                ("Sentimiento inicio → fin", f"{_d(x['sent_inicio'].mean(), 2)} → {_d(x['sent_fin'].mean(), 2)}",
+                 "de −1 (muy negativo) a 1", ""),
+            ])
+            e1, e2 = st.columns([1, 1])
+            with e1:
+                subm = x["submotivo"].value_counts().rename_axis("submotivo").reset_index(name="llamadas")
+                if len(subm):
+                    st.markdown("**Submotivos**")
+                    st.altair_chart(barras_simples(subm, "submotivo", "llamadas", BLUE, "Submotivo", "Llamadas", ".0f",
+                                                   alto=240), width="stretch")
+            with e2:
+                st.markdown("**Lo que dicen los clientes**")
+                citas = x[(x["confianza"] >= 0.6) & (x["evidencia"].str.len() >= 60)] \
+                    .sort_values("confianza", ascending=False).head(3)
+                if len(citas):
+                    for _, r in citas.iterrows():
+                        st.markdown(f'<div class="quote">“{_e(r["evidencia"][:280])}”<div class="qm">llamada '
+                                    f'{r["id_llamada"]} · urgencia {_e(r["urgencia"])} · {_e(r["resultado"])}</div></div>',
+                                    unsafe_allow_html=True)
+                else:
+                    st.caption("No hay citas con confianza suficiente para este motivo.")
+            with st.expander("Ver todas las llamadas analizadas"):
+                cols = [c for c in ["id_llamada", "cluster", "motivo", "submotivo", "urgencia", "sent_inicio",
+                                    "sent_fin", "resultado", "evidencia", "confianza", "calidad_transcripcion"]
+                        if c in ll.columns]
+                st.dataframe(ll[cols], hide_index=True, width="stretch")
+
         puente = _csv("puente_llamadas_dataset.csv")
         if puente is not None:
-            with st.expander("Puente llamadas → dataset (cruce agregado, no hay llave común)"):
+            with st.expander("Puente llamadas → dataset (cruce agregado: no hay llave común entre llamadas y clientes)"):
                 st.dataframe(puente, hide_index=True, width="stretch")
-        if config.T_LLAMADAS_ANALISIS.exists():
-            with st.expander("Explorar llamadas analizadas"):
-                ll = pd.read_parquet(config.T_LLAMADAS_ANALISIS)
-                cols = [c for c in ["id_llamada", "cluster", "motivo", "submotivo", "urgencia", "sent_inicio", "sent_fin",
-                                    "competidor_mencionado", "resultado", "evidencia", "calidad_transcripcion"]
-                        if c in ll.columns]
-                motivo = st.selectbox("Motivo", ["(todos)"] + sorted(ll["motivo"].dropna().unique().tolist()))
-                if motivo != "(todos)":
-                    ll = ll[ll["motivo"] == motivo]
-                st.dataframe(ll[cols], hide_index=True, width="stretch")
+        st.caption(f"Método: {nlp.get('metodo_final', 'baseline_reglas')} · "
+                   f"preprocesamiento: {json.dumps(nlp.get('preprocesamiento', {}), ensure_ascii=False)}")
 
 # --------------------------------------------------------------------------- 5. Accionables
 with tabs[4]:
     acc = _csv("accionables.csv")
     if acc is not None:
-        section("Accionables priorizados", "Impacto anual en tres escenarios de éxito de retención")
+        sup = (_json("accionables.json") or {}).get("supuestos", {})
+        esc_tasas = sup.get("escenarios_tasa_exito", {})
+        guia("Acciones concretas para el Cluster 3, priorizadas por impacto y esfuerzo. **Proactivas**: se hacen antes "
+             "de que el cliente llame (por ejemplo, con la lista del modelo). **Reactivas**: se hacen cuando el cliente "
+             "ya llamó.",
+             f"el impacto es renta anual salvada neta del costo de contacto. Depende de qué tanto funcione la retención: "
+             f"elige un escenario ({', '.join(f'{k} {_pct(v, 0)}' for k, v in esc_tasas.items())} de éxito). "
+             "Un valor negativo significa que en ese escenario la acción cuesta más de lo que salva.")
+        nombres_esc = {"conservador": "Conservador", "base": "Base", "optimista": "Optimista"}
+        esc = st.radio("Escenario de éxito de retención", list(nombres_esc), index=1, horizontal=True,
+                       format_func=lambda k: nombres_esc[k])
+        colv = f"impacto_anual_{esc}_cop"
         kpis_row([
-            ("Impacto anual · escenario base", _cop(acc["impacto_anual_base_cop"].sum()), "suma de accionables", "blue"),
-            ("Escenario optimista", _cop(acc["impacto_anual_optimista_cop"].sum()), "", ""),
-            ("Escenario conservador", _cop(acc["impacto_anual_conservador_cop"].sum()), "", "orange"),
+            (f"Impacto anual · escenario {esc}", _cop(acc[colv].sum()), "suma de accionables", "blue"),
+            ("Accionables con impacto positivo", f"{_n((acc[colv] > 0).sum())} de {_n(acc[colv].notna().sum())}",
+             "con impacto cuantificado", ""),
             ("Proactivos / reactivos", f"{_n((acc['tipo'] == 'Proactivo').sum())} / {_n((acc['tipo'] == 'Reactivo').sum())}",
              "", ""),
+            ("Supuestos", f"{sup.get('meses', '')} meses", f"contacto ${_n(sup.get('costo_contacto_cop', 0))}", ""),
         ])
-        st.write("")
+        imp = acc[acc[colv].notna()].assign(millones=lambda t: t[colv] / 1e6,
+                                             nombre=lambda t: t["id"] + " · " + t["accionable"].str[:55])
+        if len(imp):
+            section("Impacto anual por accionable (millones de COP)")
+            graf = alt.Chart(imp).mark_bar(cornerRadiusEnd=4).encode(
+                y=alt.Y("nombre:N", sort="-x", title=None, axis=alt.Axis(labelLimit=380, labelColor=INK2, ticks=False,
+                                                                        domain=False)),
+                x=alt.X("millones:Q", title="Millones de COP al año",
+                        axis=alt.Axis(gridColor=GRID, labelColor=INK2, titleColor=INK2, domain=False, ticks=False)),
+                color=alt.Color("tipo:N", scale=alt.Scale(domain=["Proactivo", "Reactivo"], range=[BLUE, ORANGE]),
+                                legend=alt.Legend(orient="top", title=None, labelColor=INK2)),
+                tooltip=[alt.Tooltip("id:N"), alt.Tooltip("accionable:N"), alt.Tooltip("tipo:N"),
+                         alt.Tooltip("millones:Q", title="Millones COP", format=",.1f"),
+                         alt.Tooltip("n_objetivo:Q", title="Clientes objetivo", format=",.0f")],
+            ).properties(height=48 * len(imp)).configure_view(stroke=None).configure(background="transparent")
+            st.altair_chart(graf, width="stretch")
+            mejor = imp.sort_values(colv, ascending=False).iloc[0]
+            lectura(f"En el escenario **{esc}**, la acción de mayor impacto es **{mejor['id']} · {mejor['accionable']}** "
+                    f"con **{_cop(mejor[colv])}** al año.")
+
+        section("Detalle de cada accionable")
         col1, col2 = st.columns([2, 3])
         with col1:
             _fig("matriz_impacto_esfuerzo.png")
+            st.caption("Arriba a la izquierda: alto impacto y bajo esfuerzo (quick wins).")
         with col2:
             for _, r in acc.iterrows():
                 tono = "blue" if r["tipo"] == "Proactivo" else "orange"
                 with st.container(border=True):
                     st.markdown(f"{pill(r['id'], 'gray')}{pill(r['tipo'], tono)}{pill(r['prioridad'], 'good')}"
                                 f"<br><b>{_e(r['accionable'])}</b>", unsafe_allow_html=True)
-                    st.caption(f"Impacto anual base: {_cop(r['impacto_anual_base_cop'])} · "
-                               f"objetivo: {r['objetivo']}")
+                    valor = _cop(r[colv]) if pd.notna(r[colv]) else "no cuantificado"
+                    st.caption(f"Impacto anual ({esc}): {valor} · objetivo: {r['objetivo']}")
                     with st.expander("Evidencia y métrica"):
                         st.markdown(f"**Evidencia:** {r['evidencia']}")
                         st.markdown(f"**Métrica de seguimiento:** {r['metrica']}")
@@ -496,7 +678,7 @@ with tabs[4]:
             vista = acc[["id", "prioridad", "accionable", "tipo", "n_objetivo", "impacto_anual_conservador_cop",
                          "impacto_anual_base_cop", "impacto_anual_optimista_cop"]].copy()
             for c_ in ["impacto_anual_conservador_cop", "impacto_anual_base_cop", "impacto_anual_optimista_cop"]:
-                vista[c_] = vista[c_].map(_cop)
+                vista[c_] = vista[c_].map(lambda v: _cop(v) if pd.notna(v) else "")
             st.dataframe(vista, hide_index=True, width="stretch")
 
 # --------------------------------------------------------------------------- 6. Agente
@@ -504,6 +686,13 @@ with tabs[5]:
     from cluster3.agents.graph import ask, resume  # import tardío: carga el grafo solo si se usa
     from cluster3.agents.tools import TOOLS_POR_AGENTE
 
+    guia("Un equipo de agentes de IA con el que puedes conversar sobre el Cluster 3. El **orquestador** decide qué "
+         "especialista responde, cada especialista consulta sus **herramientas** (datos, modelo, llamadas) y el "
+         "**crítico** revisa que cada cifra venga de una herramienta. Exportar una lista de clientes siempre pide tu "
+         "**aprobación**.",
+         "escribe como le hablarías a un analista (puedes saludar y hacer preguntas de seguimiento). Arriba de cada "
+         "respuesta verás qué agente respondió, si las cifras quedaron verificadas, el modelo usado y el tiempo; en "
+         "*Traza y evidencia* está lo que devolvió cada herramienta.")
     section("Tu equipo de agentes", "El orquestador elige quién responde; el crítico verifica cada cifra; "
                                     "exportar datos siempre pide aprobación humana")
     equipo = ["orquestador", "perfilado", "voz_cliente", "estrategia", "critico"]
@@ -638,6 +827,11 @@ with tabs[5]:
 
 # --------------------------------------------------------------------------- 7. Evaluación
 with tabs[6]:
+    guia("Cómo se comprobó que lo que muestra el panel es confiable: (1) la clasificación de llamadas se midió contra "
+         "llamadas etiquetadas a mano, (2) el sistema de agentes se prueba con preguntas doradas de respuesta conocida "
+         "y (3) los datos pasaron por controles de calidad y de fuga de información.",
+         "**exactitud** = % de aciertos; **kappa** = acuerdo descontando el azar (0,4–0,6 es moderado, más de 0,6 "
+         "bueno); **correlación** = qué tanto el puntaje de sentimiento sigue al criterio humano.")
     section("Sistema multiagente · preguntas doradas", "Ruta, cifras respaldadas, contenido esperado y aprobación humana")
     ev = _csv("agent_evals.csv")
     if ev is not None:
@@ -651,8 +845,30 @@ with tabs[6]:
         st.caption("Regenerar: `uv run python -m cluster3.agents.evals` (añade juez LLM si hay clave).")
     section("Clasificación de llamadas · benchmark", "Reglas vs LLM vs Jev contra la muestra etiquetada a mano")
     bench = _csv("nlp_benchmark.csv")
-    if bench is not None:
-        st.dataframe(bench, hide_index=True, width="stretch")
+    if bench is not None and "metodo" in bench:
+        nombres_m = {"baseline": "Reglas", "llm": "LLM + RAG", "jev": "Jev", "hibrido": "Híbrido (final)"}
+        metodos = [m for m in nombres_m if m in set(bench["metodo"])]
+        b = bench.assign(Método=bench["metodo"].map(nombres_m),
+                         valor=np.where(bench["campo"] == "sentimiento", bench.get("correlacion_spearman"),
+                                        bench["exactitud"]))
+        b["métrica"] = np.where(b["campo"] == "sentimiento", "correlación", "exactitud")
+        paleta = {"Reglas": "#b9b7b0", "LLM + RAG": ORANGE, "Jev": "#7a5bd6", "Híbrido (final)": BLUE}
+        graf = alt.Chart(b).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+            x=alt.X("Método:N", sort=[nombres_m[m] for m in metodos], title=None,
+                    axis=alt.Axis(labelAngle=0, labelColor=INK2, ticks=False, domain=False)),
+            y=alt.Y("valor:Q", title=None, scale=alt.Scale(domain=[0, 1]),
+                    axis=alt.Axis(gridColor=GRID, labelColor=INK2, domain=False, ticks=False, format="%")),
+            color=alt.Color("Método:N", scale=alt.Scale(domain=list(paleta), range=list(paleta.values())),
+                            legend=alt.Legend(orient="top", title=None, labelColor=INK2)),
+            column=alt.Column("campo:N", title=None, sort=["motivo", "urgencia", "sentimiento"],
+                              header=alt.Header(labelColor=INK, labelFontSize=13)),
+            tooltip=["Método:N", "campo:N", "métrica:N", alt.Tooltip("valor:Q", format=".2f"),
+                     alt.Tooltip("kappa:Q", format=".2f"), alt.Tooltip("n:Q", title="llamadas")],
+        ).properties(width=210, height=240).configure_view(stroke=None).configure(background="transparent")
+        st.altair_chart(graf)
+        st.caption("Motivo y urgencia: exactitud. Sentimiento: correlación con la etiqueta humana (−1 / 0 / 1).")
+        with st.expander("Tabla del benchmark"):
+            st.dataframe(bench, hide_index=True, width="stretch")
     else:
         st.info("Pendiente: etiquetar data/labels/muestra_etiquetada.csv (50 llamadas) y correr "
                 "`uv run python -m cluster3.nlp.run --llm --jev`.")

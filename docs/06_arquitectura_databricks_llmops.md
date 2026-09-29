@@ -46,7 +46,7 @@ flowchart LR
 | Ingesta | Excel subido a mano al Volume | Tablas del data lake de Claro, carga mensual |
 | Pipeline | Job `cluster3_pipeline` a demanda | Lakeflow Jobs mensual (dataset) + diario (llamadas) |
 | Scoring | Batch sobre el mes | Batch semanal; lista del decil 1 cada lunes |
-| NLP | Reglas; LLM y Jev sobre la muestra etiquetada | LLM/Jev sobre todas las llamadas nuevas del día |
+| NLP | Híbrido Jev + LLM sobre las 500 llamadas (reanudable) | Híbrido sobre las llamadas nuevas del día |
 | Agentes | App con modo llm u offline | App + endpoint del agente registrado en MLflow |
 
 ## MLOps
@@ -70,11 +70,11 @@ flowchart LR
 | Salida estructurada | Esquema Pydantic `CallAnalysis`; validación y un reintento |
 | Anclaje | La evidencia debe ser cita literal de la transcripción; si no, se marca y se reintenta |
 | Recuperación | Pocos ejemplos etiquetados a mano elegidos por similitud (RAG few-shot) |
-| Evaluación NLP | Reglas vs LLM vs Jev contra 50 llamadas etiquetadas: F1 macro, kappa, exactitud de urgencia |
-| Evaluación agentes | 9 preguntas doradas: ruta, cifras respaldadas, contenido, aprobación humana, juez LLM (G-Eval) |
+| Evaluación NLP | Reglas vs LLM vs Jev vs híbrido contra 50 llamadas etiquetadas a mano: exactitud, F1 macro, kappa y correlación de sentimiento (`nlp_benchmark.csv`) |
+| Evaluación agentes | 12 preguntas doradas: ruta, cifras respaldadas, contenido, aprobación humana, juez LLM (G-Eval) |
 | Guardarraíles | SQL de solo lectura, límite de filas, herramienta sensible con aprobación humana, crítico de cifras |
 | Trazabilidad | Traza por nodo (agentes, herramientas, latencia) visible en la app |
-| Costo | Modo offline sin LLM; LLM solo donde agrega valor (clasificación y síntesis) |
+| Costo y latencia | Modo offline sin LLM; modelo rápido para enrutar y juzgar; especialistas en paralelo; caché de respuestas; streaming |
 | Privacidad | Segunda pasada de PII antes de enviar texto a cualquier LLM; datos eliminados al cierre |
 
 ## Seguridad y datos
