@@ -30,3 +30,4 @@ __pycache__/
 .streamlit/secrets.toml
 *.zip
 .DS_Store
+.tmp/

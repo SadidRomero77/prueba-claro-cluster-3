@@ -36,6 +36,16 @@ def _impact(n_obj: int, p_irse: float, arpu: float, tasa: float, costo_contacto:
     return n_obj * p_irse * tasa * arpu * MESES - n_obj * costo_contacto
 
 
+def _rentables(df: pd.DataFrame) -> pd.DataFrame:
+    """Clientes a los que conviene contactar: valor esperado positivo con su propia probabilidad fuera de muestra.
+
+    p_churn_oof × tasa de éxito (escenario base) × ARPU × meses > costo de contacto. Es el mismo criterio del umbral
+    de negocio del modelo: contactar a todo un segmento incluye clientes cuyo contacto cuesta más de lo que salva.
+    """
+    ev = df["p_churn_oof"] * ESCENARIOS["base"] * df[config.ARPU_COL] * MESES
+    return df[ev > COSTO_CONTACTO]
+
+
 def build_actions(sc: pd.DataFrame, nlp: dict | None = None) -> pd.DataFrame:
     """sc: dataset limpio con scores (clientes_c3_scores.parquet)."""
     C, I, A = config.TARGET_CHURN, config.TARGET_INTENCION, config.ARPU_COL  # noqa: E741
@@ -44,12 +54,12 @@ def build_actions(sc: pd.DataFrame, nlp: dict | None = None) -> pd.DataFrame:
     # 1 · Alerta de fin de promoción / subida de renta
     up = sc[sc["VAL_VAR_RENTA"] > 5]
     flat = sc[sc["VAL_VAR_RENTA"] <= 5]
-    obj = up[up["decil_churn"] <= 2]
+    obj = _rentables(up[up["decil_churn"] <= 2])
     acts.append(dict(
         id="A1", accionable="Alerta de subida de factura: contactar antes de que llegue el incremento", tipo="Proactivo",
         evidencia=f"Con renta +5 % vs 6 meses el churn es {_pct(up[C].mean(), 2)} vs {_pct(flat[C].mean(), 2)}; "
                   f"{_n(len(up))} clientes con subida",
-        objetivo="Renta en alza y deciles 1–2 de riesgo de churn",
+        objetivo="Renta en alza, deciles 1–2 de riesgo de churn y valor esperado del contacto positivo",
         n_objetivo=len(obj), p_irse=obj[C].mean(), arpu=obj[A].median(), impacto_score=4, esfuerzo_score=3,
         metrica="Churn a 60 días en clientes con incremento; tasa de aceptación del ajuste",
     ))
@@ -102,11 +112,14 @@ def build_actions(sc: pd.DataFrame, nlp: dict | None = None) -> pd.DataFrame:
 
     # 5 · Lista semanal por riesgo (modelo)
     top = sc[sc["decil_churn"] == 1]
+    obj5 = _rentables(top)
     acts.append(dict(
         id="A5", accionable="Lista semanal del decil de mayor riesgo de churn para contacto proactivo", tipo="Proactivo",
         evidencia=f"En validación cruzada, el decil 1 del modelo concentra {top[C].sum()} de {sc[C].sum()} bajas "
-                  f"({_pct(top[C].sum() / sc[C].sum(), 0)}) contactando al 10 % de la base",
-        objetivo="Decil 1 de riesgo de churn", n_objetivo=len(top), p_irse=top[C].mean(), arpu=top[A].median(),
+                  f"({_pct(top[C].sum() / sc[C].sum(), 0)}) contactando al 10 % de la base; se contacta a los "
+                  f"{_n(len(obj5))} con valor esperado positivo, que concentran {obj5[C].sum()} bajas",
+        objetivo="Decil 1 de riesgo de churn con valor esperado del contacto positivo", n_objetivo=len(obj5),
+        p_irse=obj5[C].mean(), arpu=obj5[A].median(),
         impacto_score=4, esfuerzo_score=2, metrica="Churn del decil contactado vs grupo de control",
     ))
 

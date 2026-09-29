@@ -52,9 +52,12 @@ LEAK_ESTADO_TV = ["TIPO_TV_DIGITAL_PI", "TIPO_TV_DIGITAL_BI"]
 # Derivadas de la intención: los reincidentes a 30 días son un subconjunto exacto de BAN_INTENCION.
 LEAK_INTENCION = ["CANTIDAD_INTENCIONES", "BAN_REINCIDENTE_30", "BAN_REINCIDENTE_60", "MOTIVO_LLAM_CANCELA"]
 # Reacción de la compañía a la intención (posteriores al evento).
+# BAN_CAMPANA_VENTA describe el tipo de la misma campaña del mes que BAN_CAMPANA_ACTIVA/RETENCION/CORRECTIVA:
+# con un solo corte no se sabe si la campaña fue antes o después de la llamada (intención 46 % vs 15 %).
 POST_EVENTO = [
     "BAN_RETENCION_ACTIVA",
     "BAN_CAMPANA_RETENCION",
+    "BAN_CAMPANA_VENTA",
     "VAL_CAMPANA_RETENCION_36M",
     "BAN_CAMPANA_ACTIVA",
     "BAN_CAMPANA_CORRECTIVA",

@@ -53,12 +53,12 @@ class JevClassifier:
             ),
             "urgencia": Score(
                 instructions="¿Qué tan firme y urgente es la intención de cancelar del cliente?",
-                levels={"baja": tx.URGENCIA["baja"], "media": tx.URGENCIA["media"], "alta": tx.URGENCIA["alta"]},
+                # Rúbrica ordenada de menor a mayor: el score es la posición (0 = baja, 2 = alta)
+                criteria=[tx.URGENCIA["baja"], tx.URGENCIA["media"], tx.URGENCIA["alta"]],
             ),
             "sentimiento": Score(
                 instructions="¿Cómo se siente el cliente durante la llamada?",
-                levels={"muy_negativo": "Enojado o frustrado", "negativo": "Molesto", "neutral": "Neutral",
-                        "positivo": "Conforme", "muy_positivo": "Satisfecho"},
+                criteria=["Enojado o frustrado", "Molesto", "Neutral", "Conforme", "Satisfecho"],
             ),
             "competidor": Noul(instructions="¿El cliente dice que se va o tiene oferta de otro operador?"),
             "reincidencia": Noul(instructions="¿El cliente dice que ya había reclamado antes por lo mismo?"),

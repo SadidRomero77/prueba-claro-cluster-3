@@ -7,6 +7,7 @@ Funciona sin clave de LLM (modo offline por reglas); con clave usa el modo llm.
 """
 from __future__ import annotations
 
+import html
 import json
 import sys
 from pathlib import Path
@@ -18,6 +19,7 @@ if str(_SRC) not in sys.path:
 
 import os  # noqa: E402
 
+import altair as alt  # noqa: E402
 import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 
@@ -36,11 +38,80 @@ if os.getenv("CLUSTER3_VOLUME"):
 
 from cluster3 import config  # noqa: E402
 from cluster3 import llm as llm_factory  # noqa: E402
-from cluster3.eda.profile import _slug  # noqa: E402
+from cluster3.agents import prompts as P  # noqa: E402
+from cluster3.eda.profile import BLUE, GRID, INK, INK2, ORANGE, _slug  # noqa: E402
 
 st.set_page_config(page_title="Cluster 3 · Churn Claro", page_icon="📉", layout="wide")
 
-BLUE, ORANGE = "#2a78d6", "#eb6834"
+# --------------------------------------------------------------------------- estilo
+# Tokens de la paleta del proyecto (docs/CLAUDE.md). El texto usa tinta neutra; el color identifica series.
+CSS = f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root {{
+  --ink: {INK}; --ink2: {INK2}; --muted: #8a8983; --grid: {GRID};
+  --surface: #ffffff; --bg: #f7f6f3; --blue: {BLUE}; --blue-soft: #e9f1fb;
+  --orange: {ORANGE}; --orange-soft: #fdeee7; --good: #1f7a4d; --good-soft: #e6f4ec;
+  --warn: #9a6200; --warn-soft: #fcf1dc;
+}}
+html, body, [class*="css"], .stMarkdown, .stText, button, input, textarea {{ font-family: 'Inter', sans-serif; }}
+.block-container {{ padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1320px; }}
+h1, h2, h3 {{ letter-spacing: -0.01em; }}
+
+.hero {{ background: linear-gradient(120deg, #0b0b0b 0%, #1b2a3f 55%, #2a78d6 140%); color: #fff;
+  border-radius: 18px; padding: 26px 30px 22px; margin-bottom: 18px; }}
+.hero .eyebrow {{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }}
+.hero h1 {{ color: #fff; font-size: 30px; font-weight: 700; margin: 6px 0 6px; line-height: 1.15; }}
+.hero p {{ color: #d9dee6; font-size: 15px; margin: 0 0 14px; max-width: 900px; }}
+.chip {{ display: inline-block; font-size: 12.5px; font-weight: 500; padding: 5px 11px; border-radius: 999px;
+  margin: 0 6px 6px 0; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); color: #fff; }}
+
+.kpi {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 15px 16px 13px;
+  height: 100%; min-height: 124px; position: relative; overflow: hidden; }}
+.kpi::before {{ content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grid); }}
+.kpi.blue::before {{ background: var(--blue); }} .kpi.orange::before {{ background: var(--orange); }}
+.kpi .lbl {{ font-size: 12.5px; color: var(--ink2); font-weight: 500; }}
+.kpi .val {{ font-size: 26px; font-weight: 700; color: var(--ink); margin-top: 4px; line-height: 1.1; }}
+.kpi .sub {{ font-size: 12px; color: var(--muted); margin-top: 4px; }}
+
+.sec {{ margin: 22px 0 10px; }}
+.sec .t {{ font-size: 19px; font-weight: 650; color: var(--ink); }}
+.sec .s {{ font-size: 13.5px; color: var(--ink2); margin-top: 2px; }}
+
+.card {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 16px 18px;
+  height: 100%; }}
+.card .ic {{ font-size: 20px; }} .card .ct {{ font-weight: 650; font-size: 14.5px; margin: 6px 0 4px; color: var(--ink); }}
+.card .cx {{ font-size: 13.5px; color: var(--ink2); line-height: 1.45; }}
+
+.agent {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 14px 15px;
+  height: 100%; min-height: 210px; }}
+.agent .an {{ font-weight: 650; font-size: 14px; color: var(--ink); margin: 4px 0 3px; }}
+.agent .ad {{ font-size: 12.5px; color: var(--ink2); line-height: 1.4; }}
+.agent .at {{ font-size: 11.5px; color: var(--muted); margin-top: 8px; }}
+
+.pill {{ display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  margin: 0 5px 4px 0; border: 1px solid transparent; }}
+.pill.blue {{ background: var(--blue-soft); color: #1d5aa3; }}
+.pill.orange {{ background: var(--orange-soft); color: #a84113; }}
+.pill.good {{ background: var(--good-soft); color: var(--good); }}
+.pill.warn {{ background: var(--warn-soft); color: var(--warn); }}
+.pill.gray {{ background: #efeeea; color: var(--ink2); }}
+
+.stTabs [data-baseweb="tab-list"] {{ gap: 4px; border-bottom: 1px solid var(--grid); }}
+.stTabs [data-baseweb="tab"] {{ padding: 8px 14px; border-radius: 10px 10px 0 0; font-weight: 500; }}
+.stTabs [aria-selected="true"] {{ background: var(--surface); }}
+[data-testid="stSidebar"] {{ background: #fbfaf8; border-right: 1px solid var(--grid); }}
+[data-testid="stChatMessage"] {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px;
+  padding: 10px 14px; margin-bottom: 8px; }}
+[data-testid="stMetricValue"] {{ font-weight: 700; }}
+div[data-testid="stExpander"] details {{ border-radius: 12px; border-color: var(--grid); background: var(--surface); }}
+</style>
+"""
+st.markdown(CSS, unsafe_allow_html=True)
+
+AVATAR = {"conversacion": "👋", "perfilado": "📊", "voz_cliente": "🎧", "estrategia": "🎯", "critico": "✅",
+          "orquestador": "🧭"}
+TONO_AGENTE = {"perfilado": "blue", "voz_cliente": "orange", "estrategia": "good", "conversacion": "gray"}
 
 
 # --------------------------------------------------------------------------- carga
@@ -80,6 +151,73 @@ def _n(x: float) -> str:
     return f"{x:,.0f}".replace(",", ".")
 
 
+# --------------------------------------------------------------------------- componentes
+def _e(x) -> str:
+    return html.escape(str(x))
+
+
+def section(titulo: str, sub: str | None = None) -> None:
+    s = f'<div class="s">{_e(sub)}</div>' if sub else ""
+    st.markdown(f'<div class="sec"><div class="t">{_e(titulo)}</div>{s}</div>', unsafe_allow_html=True)
+
+
+def kpis_row(items: list[tuple[str, str, str, str]]) -> None:
+    """items: (etiqueta, valor, subtítulo, tono blue|orange|'')"""
+    cols = st.columns(len(items))
+    for col, (lbl, val, sub, tono) in zip(cols, items):
+        col.markdown(f'<div class="kpi {tono}"><div class="lbl">{_e(lbl)}</div><div class="val">{_e(val)}</div>'
+                     f'<div class="sub">{_e(sub)}</div></div>', unsafe_allow_html=True)
+
+
+def cards(items: list[tuple[str, str, str]], por_fila: int = 3) -> None:
+    """items: (ícono, título, texto con **negritas**)"""
+    for i in range(0, len(items), por_fila):
+        cols = st.columns(por_fila)
+        for col, (ic, t, x) in zip(cols, items[i:i + por_fila]):
+            x = _e(x)
+            while "**" in x:  # **texto** → <b>texto</b>
+                x = x.replace("**", "<b>", 1).replace("**", "</b>", 1)
+            col.markdown(f'<div class="card"><div class="ic">{ic}</div><div class="ct">{_e(t)}</div>'
+                         f'<div class="cx">{x}</div></div>', unsafe_allow_html=True)
+        st.write("")
+
+
+def pill(texto: str, tono: str = "gray") -> str:
+    return f'<span class="pill {tono}">{_e(texto)}</span>'
+
+
+def barras_agrupadas(df: pd.DataFrame, cat: str, series: list[str], colores: list[str], titulo_x: str,
+                     alto: int = 320) -> alt.Chart:
+    """Barras horizontales agrupadas, una serie por color fijo, con tooltip."""
+    largo = df.melt(id_vars=cat, value_vars=series, var_name="serie", value_name="valor")
+    orden = df.sort_values(series[0], ascending=False)[cat].tolist()
+    base = alt.Chart(largo).encode(
+        y=alt.Y(f"{cat}:N", sort=orden, title=None, axis=alt.Axis(labelLimit=260, labelColor=INK2, ticks=False,
+                                                                  domain=False)),
+        yOffset=alt.YOffset("serie:N", sort=series),
+        x=alt.X("valor:Q", title=titulo_x, axis=alt.Axis(gridColor=GRID, labelColor=INK2, titleColor=INK2,
+                                                         domain=False, ticks=False)),
+        color=alt.Color("serie:N", sort=series, scale=alt.Scale(domain=series, range=colores),
+                        legend=alt.Legend(orient="top", title=None, labelColor=INK2)),
+        tooltip=[alt.Tooltip(f"{cat}:N", title=cat), alt.Tooltip("serie:N", title="Serie"),
+                 alt.Tooltip("valor:Q", title=titulo_x, format=".1f")],
+    )
+    return (base.mark_bar(cornerRadiusEnd=4, height={"band": 0.9})
+            .properties(height=alto).configure_view(stroke=None).configure(background="transparent"))
+
+
+def barras_simples(df: pd.DataFrame, x: str, y: str, color: str, titulo_x: str, titulo_y: str,
+                   fmt: str = ".1f", alto: int = 260) -> alt.Chart:
+    return (alt.Chart(df).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4, color=color)
+            .encode(x=alt.X(f"{x}:O", title=titulo_x, axis=alt.Axis(labelAngle=0, labelColor=INK2, titleColor=INK2,
+                                                                    ticks=False, domain=False)),
+                    y=alt.Y(f"{y}:Q", title=titulo_y, axis=alt.Axis(gridColor=GRID, labelColor=INK2,
+                                                                    titleColor=INK2, domain=False, ticks=False)),
+                    tooltip=[alt.Tooltip(f"{x}:O", title=titulo_x), alt.Tooltip(f"{y}:Q", title=titulo_y, format=fmt)])
+            .properties(height=alto).configure_view(stroke=None).configure(background="transparent"))
+
+
+# --------------------------------------------------------------------------- datos
 kpis = _json("kpis_cluster3.json")
 if kpis is None:
     st.error("No hay resultados todavía. Ejecuta primero el pipeline: `uv run cluster3`")
@@ -87,78 +225,125 @@ if kpis is None:
 
 metricas = _json("metricas_modelo.json") or {}
 nlp = _json("nlp_insights.json") or {}
+ints, ch = metricas.get("intencion", {}), metricas.get("churn", {})
+hay_llm = llm_factory.llm_available()
+hay_jev = bool(config.TYPESAFE_API_KEY)
 
 # --------------------------------------------------------------------------- sidebar
 with st.sidebar:
-    st.markdown("### Cluster 3 · Churn")
+    st.markdown("### 📉 Cluster 3 · Churn")
     st.caption("Prueba técnica Claro Colombia · periodo 202508")
-    hay_llm = llm_factory.llm_available()
+    st.markdown(pill("LLM conectado" if hay_llm else "LLM sin clave", "good" if hay_llm else "warn")
+                + pill("Jev conectado" if hay_jev else "Jev sin clave", "good" if hay_jev else "warn"),
+                unsafe_allow_html=True)
     opciones = ["llm", "offline"] if hay_llm else ["offline"]
-    modo = st.radio("Modo del agente", opciones, index=0,
+    modo = st.radio("Modo del agente", opciones, index=0, horizontal=True,
                     help="llm: agentes ReAct con herramientas. offline: enrutamiento y herramientas por reglas, "
                          "sin clave de API.")
-    st.caption(f"Proveedor: `{config.LLM_PROVIDER}` · modelo: `{llm_factory.model_name()}`" if hay_llm
-               else "Sin clave de LLM: el agente responde en modo offline.")
+    if hay_llm:
+        st.caption(f"Proveedor `{config.LLM_PROVIDER}` · modelo `{llm_factory.model_name()}`")
+    st.caption(f"Prompts `{P.PROMPT_VERSION}`")
     st.divider()
     st.caption("Datos internos de Claro sin datos personales. Se eliminan al terminar el proceso.")
 
-st.title("Cluster Crítico (Cluster 3) — churn e intención de cancelación")
+# --------------------------------------------------------------------------- portada
+chips = [f"{_n(kpis['clientes'])} clientes", f"{_n(nlp.get('llamadas_c3', 0))} llamadas del Cluster 3"]
+if ints:
+    chips.append(f"Modelo de intención · AUC {_d(ints['auc_cv_media'])}")
+if ch:
+    chips.append(f"Modelo de churn · AUC {_d(ch['auc_cv_media'])}")
+chips.append("Agentes con LLM" if hay_llm else "Agentes en modo offline")
+st.markdown(
+    '<div class="hero"><div class="eyebrow">Claro Colombia · Analítica avanzada</div>'
+    "<h1>Cluster Crítico: intención de cancelación y churn</h1>"
+    f"<p>El {_e(_pct(kpis['intencion_tasa']))} de los clientes pidió cancelar este mes y el "
+    f"{_e(_pct(kpis['churn_tasa'], 2))} se fue. Qué los mueve, a quién contactar primero y cuánto vale hacerlo.</p>"
+    + "".join(f'<span class="chip">{_e(c)}</span>' for c in chips) + "</div>",
+    unsafe_allow_html=True,
+)
 
-tabs = st.tabs(["Resumen", "Segmentos", "Modelos", "Voz del cliente", "Accionables", "Agente", "Evaluación"])
+tabs = st.tabs(["🏠 Resumen", "🧩 Segmentos", "🤖 Modelo ML", "🎧 Voz del cliente", "🎯 Accionables",
+                "💬 Agente", "🧪 Evaluación"])
 
 # --------------------------------------------------------------------------- 1. Resumen
 with tabs[0]:
-    c = st.columns(5)
-    c[0].metric("Clientes", _n(kpis["clientes"]))
-    c[1].metric(f"Churn del mes · {_n(kpis['churn_n'])} bajas", _pct(kpis["churn_tasa"], 2))
-    c[2].metric(f"Intención de cancelar · {_n(kpis['intencion_n'])}", _pct(kpis["intencion_tasa"]))
-    c[3].metric("Renta mensual total", _cop(kpis["renta_mensual_total"]))
-    c[4].metric("Renta de quienes quieren irse", _cop(kpis["renta_mensual_intencion"]))
+    veces = kpis["churn_si_intencion"] / kpis["churn_no_intencion"] if kpis["churn_no_intencion"] else 0
+    kpis_row([
+        ("Clientes del Cluster 3", _n(kpis["clientes"]), "periodo 202508", ""),
+        ("Intención de cancelar", _pct(kpis["intencion_tasa"]), f"{_n(kpis['intencion_n'])} clientes", "blue"),
+        ("Churn del mes", _pct(kpis["churn_tasa"], 2), f"{_n(kpis['churn_n'])} bajas", "orange"),
+        ("Renta de quienes quieren irse", _cop(kpis["renta_mensual_intencion"]), "renta mensual", "blue"),
+        ("ARPU mediano", _cop(kpis["arpu_mediano"]), "renta mensual por cliente", ""),
+    ])
+    st.write("")
+    kpis_row([
+        ("Churn si llamó a cancelar", _pct(kpis["churn_si_intencion"], 2),
+         f"{_d(veces, 1)}× más que si no llamó ({_pct(kpis['churn_no_intencion'], 2)})", "orange"),
+        ("Renta de los que se fueron", _cop(kpis["renta_mensual_churn"]), "renta mensual perdida", "orange"),
+        ("Antigüedad mediana", f"{_n(kpis['antiguedad_mediana_meses'])} meses", "", ""),
+        ("Convergentes fijo + móvil", _pct(kpis["pct_convergente"]), "", ""),
+        ("Estratos 2 y 3", _pct(kpis["pct_estrato_2_3"]), "", ""),
+    ])
 
-    c = st.columns(5)
-    c[0].metric("ARPU mediano", _cop(kpis["arpu_mediano"]))
-    c[1].metric("Churn si llamó a cancelar", _pct(kpis["churn_si_intencion"], 2))
-    c[2].metric("Churn si no llamó", _pct(kpis["churn_no_intencion"], 2))
-    c[3].metric("Convergentes fijo + móvil", _pct(kpis["pct_convergente"]))
-    c[4].metric("Estratos 2 y 3", _pct(kpis["pct_estrato_2_3"]))
-
-    st.subheader("Lo que hay que saber")
+    section("Lo que hay que saber", "Hallazgos principales, calculados desde los datos")
     a1 = _csv("accionables.csv")
-    ints = metricas.get("intencion", {})
-    ch = metricas.get("churn", {})
-    bullets = [
-        f"El **{_pct(kpis['intencion_tasa'])}** de los clientes llamó a cancelar, pero solo el "
-        f"**{_pct(kpis['churn_tasa'], 2)}** se fue: la retención funciona, el problema es el volumen de llamadas.",
-        f"Precio y facturación explican el **{_pct(nlp.get('motivos_c3_pct', {}).get('precio_facturacion', 0) / 100)}** "
-        "de las llamadas de cancelación del Cluster 3.",
-    ]
     fuga = _csv("comparacion_fuga.csv")
-    if fuga is not None and len(fuga) >= 4:
-        bullets.append("Las variables que ya contienen el resultado (estado de la cuenta, plan de TV con sufijo I, "
-                       "reincidencias, reacciones de retención) se excluyeron: con ellas ambos modelos darían AUC 1,0 "
-                       "sin servir para anticipar nada.")
+    hallazgos = [
+        ("📞", "Muchos amenazan, pocos se van",
+         f"El **{_pct(kpis['intencion_tasa'])}** llamó a cancelar y solo el **{_pct(kpis['churn_tasa'], 2)}** se fue. "
+         f"Quien llama tiene **{_d(veces, 1)}×** más riesgo de irse."),
+        ("💸", "El precio manda",
+         f"Precio y facturación explican el **{_pct(nlp.get('motivos_c3_pct', {}).get('precio_facturacion', 0) / 100)}** "
+         f"de las llamadas del Cluster 3 (vs **{_pct(nlp.get('motivos_otros_pct', {}).get('precio_facturacion', 0) / 100)}** "
+         "en otros clústeres)."),
+    ]
+    if ch:
+        top10 = ch.get("matriz_top10", {})
+        hallazgos.append(("🎯", "El modelo encuentra a los que se van",
+                          f"El 10 % de mayor riesgo concentra **{_n(top10.get('VP', 0))} de {_n(ch['positivos'])}** bajas "
+                          f"(lift **{_d(ch['lift_10'], 1)}×**), validado fuera de muestra."))
+    if fuga is not None and len(fuga):
+        auc_fuga = fuga.loc[fuga["variables"] == "con fuga", "auc"].max()
+        hallazgos.append(("🧯", "Se evitó la trampa de la fuga",
+                          f"Con variables que ya contienen el resultado, el modelo daba AUC **{_d(auc_fuga, 2)}**. "
+                          "Se excluyeron: estado de la cuenta, planes de TV con sufijo I, reincidencias y retención."))
+    if nlp.get("competidores_c3"):
+        tigo = nlp["competidores_c3"].get("tigo", 0)
+        hallazgos.append(("🏁", "La competencia aparece en la llamada",
+                          f"Tigo se menciona en **{_n(tigo)}** llamadas del Cluster 3; "
+                          f"el **{_pct(nlp.get('urgencia_c3_pct', {}).get('alta', 0) / 100)}** tiene urgencia alta."))
     if a1 is not None and len(a1):
         top = a1.sort_values("impacto_anual_base_cop", ascending=False).iloc[0]
-        bullets.append(f"Accionable de mayor impacto: **{top['accionable']}** "
-                       f"({_cop(top['impacto_anual_base_cop'])} al año en el escenario base).")
-    if ints:
-        bullets.append(f"El modelo de intención ordena bien el riesgo (AUC **{_d(ints['auc_cv_media'], 3)}**); "
-                       f"el 10 % de mayor riesgo concentra **{_d(ints['lift_10'], 1)}×** la tasa base.")
-    if ch:
-        bullets.append(f"El modelo de churn (AUC **{_d(ch['auc_cv_media'], 3)}**) pone en el primer decil casi todas "
-                       "las bajas, validado fuera de muestra.")
-    for b in bullets:
-        st.markdown(f"- {b}")
+        hallazgos.append(("🚀", "Primer paso recomendado",
+                          f"**{top['id']} · {top['accionable']}**: {_cop(top['impacto_anual_base_cop'])} al año "
+                          "en el escenario base."))
+    cards(hallazgos)
+
+    mot = _csv("nlp_motivos_c3_vs_otros.csv")
+    if mot is not None:
+        section("Por qué llaman a cancelar", "% de llamadas por motivo · Cluster 3 frente a los demás clústeres")
+        st.altair_chart(barras_agrupadas(mot, "motivo", ["Cluster 3", "Otros clústeres"], [BLUE, ORANGE],
+                                         "% de llamadas"), width="stretch")
 
 # --------------------------------------------------------------------------- 2. Segmentos
 with tabs[1]:
     seg = _csv("segmentos_cluster3.csv")
     if seg is not None:
+        section("Churn e intención por segmento", "Elige una dimensión; cada gráfico lee juntas las dos variables objetivo")
         nombres = list(dict.fromkeys(seg["segmento"]))
         elegido = st.selectbox("Segmento", nombres,
                                index=nombres.index("Variación de renta vs 6 meses")
                                if "Variación de renta vs 6 meses" in nombres else 0)
         d = seg[seg["segmento"] == elegido].drop(columns="segmento")
+        grandes = d[d["clientes"] >= 200]
+        if len(grandes):
+            top_i, top_c = grandes.loc[grandes["intencion_pct"].idxmax()], grandes.loc[grandes["churn_pct"].idxmax()]
+            kpis_row([
+                ("Mayor intención", str(top_i["nivel"]), f"{_d(top_i['intencion_pct'], 1)} % · {_n(top_i['clientes'])} clientes", "blue"),
+                ("Mayor churn", str(top_c["nivel"]), f"{_d(top_c['churn_pct'], 2)} % · {_n(top_c['clientes'])} clientes", "orange"),
+                ("Niveles", _n(len(d)), "con 200 o más clientes: " + _n(len(grandes)), ""),
+            ])
+            st.write("")
         col1, col2 = st.columns([3, 2])
         with col1:
             _fig(f"segmento_{_slug(elegido)}.png")
@@ -169,31 +354,43 @@ with tabs[1]:
         with st.expander("Todos los segmentos (tabla)"):
             st.dataframe(seg, hide_index=True, width="stretch")
 
-# --------------------------------------------------------------------------- 3. Modelos
+# --------------------------------------------------------------------------- 3. Modelo ML
 with tabs[2]:
     if metricas:
+        section("Modelo predictivo en dos etapas",
+                "LightGBM · validación cruzada estratificada 3×5 · probabilidades calibradas y fuera de muestra")
         m1, m2 = st.columns(2)
-        for col, key, titulo in [(m1, "intencion", "Intención de cancelar"), (m2, "churn", "Churn")]:
+        for col, key, titulo, tono in [(m1, "intencion", "Intención de cancelar · alerta temprana", "blue"),
+                                       (m2, "churn", "Churn · baja efectiva", "orange")]:
             m = metricas.get(key)
             if not m:
                 continue
             with col:
-                st.subheader(titulo)
-                c = st.columns(4)
-                c[0].metric("AUC (CV 3×5)", _d(m['auc_cv_media']),
-                            help=f"Desviación estándar entre folds: {_d(m['auc_cv_sd'], 3)}")
-                c[1].metric("PR-AUC", _d(m['pr_auc']), help=f"Tasa base (PR-AUC de un modelo al azar): {_d(m['tasa_base'])}")
-                c[2].metric("Lift decil 1", f"{_d(m['lift_10'], 1)}×")
-                c[3].metric("Variables", m["n_variables"])
+                st.markdown(f"**{titulo}**")
                 ic = m.get("auc_oof_ic95")
-                if ic:
-                    st.caption(f"IC 95 % del AUC (bootstrap): {_d(ic[0], 3)} – {_d(ic[1], 3)}")
+                kpis_row([
+                    ("AUC", _d(m["auc_cv_media"]), f"IC 95 %: {_d(ic[0])}–{_d(ic[1])}" if ic else "", tono),
+                    ("PR-AUC", _d(m["pr_auc"]), f"base {_d(m['tasa_base'])}", tono),
+                    ("Lift decil 1", f"{_d(m['lift_10'], 1)}×", f"{_n(m['positivos'])} positivos", tono),
+                ])
+                st.write("")
                 _fig(f"shap_{key}.png")
-                _fig(f"ganancia_{key}.png")
-                for nota in m.get("notas", []):
-                    st.caption(f"· {nota}")
+                with st.expander("Curva de ganancia y notas"):
+                    _fig(f"ganancia_{key}.png")
+                    for nota in m.get("notas", []):
+                        st.caption(f"· {nota}")
 
-        st.subheader("Por qué se excluyeron variables (fuga de información)")
+        section("Lift por decil", "Qué tanto se concentra el evento en cada decil de riesgo (1 = mayor riesgo)")
+        cl1, cl2 = st.columns(2)
+        for col, key, color, titulo in [(cl1, "intencion", BLUE, "Intención"), (cl2, "churn", ORANGE, "Churn")]:
+            lt = _csv(f"lift_{key}.csv")
+            if lt is not None:
+                with col:
+                    st.markdown(f"**{titulo}**")
+                    st.altair_chart(barras_simples(lt, "decil", "lift", color, "Decil", "Lift (× tasa base)", ".2f"),
+                                    width="stretch")
+
+        section("Por qué se excluyeron variables", "Con fuga de información las métricas son perfectas e inútiles")
         fuga = _csv("comparacion_fuga.csv")
         if fuga is not None:
             st.dataframe(fuga, hide_index=True, width="stretch")
@@ -202,51 +399,50 @@ with tabs[2]:
             st.caption(f"Sensibilidad: churn sin equipos adicionales ni UltraWiFi → AUC {_d(sens['auc'], 3)}, "
                        f"lift decil 1 {_d(sens['lift_10'], 1)}×.")
 
-        st.subheader("Balance de importancia entre los dos objetivos")
-        bal = _csv("balance_importancia_targets.csv")
-        if bal is not None:
-            st.dataframe(bal, hide_index=True, width="stretch")
         cat1, cat2 = _csv("importancia_categoria_intencion.csv"), _csv("importancia_categoria_churn.csv")
         if cat1 is not None and cat2 is not None:
+            section("Qué explica el riesgo, por categoría", "Importancia SHAP agregada por categoría del diccionario (%)")
             comp = cat1.merge(cat2, on="categoria", how="outer", suffixes=(" intención", " churn")).fillna(0)
-            comp = comp.set_index("categoria").sort_values("pct_importancia intención", ascending=False)
-            st.caption("Importancia SHAP agregada por categoría del diccionario (%)")
-            st.bar_chart(comp, horizontal=True, color=[BLUE, ORANGE], stack=False)
-
-        with st.expander("Tablas de lift por decil"):
-            for key in ["intencion", "churn"]:
-                lt = _csv(f"lift_{key}.csv")
-                if lt is not None:
-                    st.markdown(f"**{key}**")
-                    st.dataframe(lt, hide_index=True, width="stretch")
+            comp = comp.rename(columns={"pct_importancia intención": "Intención", "pct_importancia churn": "Churn"})
+            st.altair_chart(barras_agrupadas(comp, "categoria", ["Intención", "Churn"], [BLUE, ORANGE],
+                                             "% de la importancia", alto=380), width="stretch")
+        bal = _csv("balance_importancia_targets.csv")
+        if bal is not None:
+            with st.expander("Balance de importancia entre los dos objetivos"):
+                st.dataframe(bal, hide_index=True, width="stretch")
 
 # --------------------------------------------------------------------------- 4. Voz del cliente
 with tabs[3]:
     if nlp:
-        c = st.columns(4)
-        c[0].metric("Llamadas del Cluster 3", _n(nlp.get("llamadas_c3", 0)))
-        c[1].metric("Urgencia alta", _pct(nlp.get('urgencia_c3_pct', {}).get('alta', 0) / 100))
-        c[2].metric("Sentimiento empeora en la llamada", _pct(nlp.get('sentimiento_c3', {}).get('empeora_pct', 0) / 100))
-        c[3].metric("Menciones a Tigo", _n(nlp.get("competidores_c3", {}).get("tigo", 0)))
+        section("Voz del cliente", "Análisis de las llamadas de cancelación: motivo, urgencia y sentimiento")
+        kpis_row([
+            ("Llamadas del Cluster 3", _n(nlp.get("llamadas_c3", 0)), f"de {_n(nlp.get('llamadas_validas', 0))} válidas", ""),
+            ("Precio y facturación", _pct(nlp.get("motivos_c3_pct", {}).get("precio_facturacion", 0) / 100),
+             "motivo principal", "blue"),
+            ("Urgencia alta", _pct(nlp.get("urgencia_c3_pct", {}).get("alta", 0) / 100), "pide la baja ya", "orange"),
+            ("Sentimiento empeora", _pct(nlp.get("sentimiento_c3", {}).get("empeora_pct", 0) / 100),
+             "del inicio al final de la llamada", ""),
+            ("Menciones a Tigo", _n(nlp.get("competidores_c3", {}).get("tigo", 0)), "llamadas", ""),
+        ])
+        mot = _csv("nlp_motivos_c3_vs_otros.csv")
+        if mot is not None:
+            section("Motivos: Cluster 3 frente al resto")
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                st.altair_chart(barras_agrupadas(mot, "motivo", ["Cluster 3", "Otros clústeres"], [BLUE, ORANGE],
+                                                 "% de llamadas"), width="stretch")
+            with col2:
+                st.dataframe(mot, hide_index=True, width="stretch")
         st.caption(f"Método: {nlp.get('metodo_final', 'baseline_reglas')} · "
                    f"preprocesamiento: {json.dumps(nlp.get('preprocesamiento', {}), ensure_ascii=False)}")
-        col1, col2 = st.columns([3, 2])
-        with col1:
-            _fig("nlp_motivos_c3_vs_otros.png")
-        with col2:
-            mot = _csv("nlp_motivos_c3_vs_otros.csv")
-            if mot is not None:
-                st.dataframe(mot, hide_index=True, width="stretch")
         sub = _csv("nlp_submotivos_c3.csv")
         if sub is not None:
-            st.subheader("Submotivos")
-            st.dataframe(sub, hide_index=True, width="stretch")
+            with st.expander("Submotivos"):
+                st.dataframe(sub, hide_index=True, width="stretch")
         puente = _csv("puente_llamadas_dataset.csv")
         if puente is not None:
-            st.subheader("Puente llamadas → dataset")
-            st.caption("Relación agregada entre lo que dicen las llamadas y las variables del dataset "
-                       "(no hay llave común a nivel cliente).")
-            st.dataframe(puente, hide_index=True, width="stretch")
+            with st.expander("Puente llamadas → dataset (cruce agregado, no hay llave común)"):
+                st.dataframe(puente, hide_index=True, width="stretch")
         if config.T_LLAMADAS_ANALISIS.exists():
             with st.expander("Explorar llamadas analizadas"):
                 ll = pd.read_parquet(config.T_LLAMADAS_ANALISIS)
@@ -262,43 +458,64 @@ with tabs[3]:
 with tabs[4]:
     acc = _csv("accionables.csv")
     if acc is not None:
+        section("Accionables priorizados", "Impacto anual en tres escenarios de éxito de retención")
+        kpis_row([
+            ("Impacto anual · escenario base", _cop(acc["impacto_anual_base_cop"].sum()), "suma de accionables", "blue"),
+            ("Escenario optimista", _cop(acc["impacto_anual_optimista_cop"].sum()), "", ""),
+            ("Escenario conservador", _cop(acc["impacto_anual_conservador_cop"].sum()), "", "orange"),
+            ("Proactivos / reactivos", f"{_n((acc['tipo'] == 'Proactivo').sum())} / {_n((acc['tipo'] == 'Reactivo').sum())}",
+             "", ""),
+        ])
+        st.write("")
         col1, col2 = st.columns([2, 3])
         with col1:
             _fig("matriz_impacto_esfuerzo.png")
         with col2:
-            tot = acc["impacto_anual_base_cop"].sum()
-            st.metric("Impacto anual escenario base (suma de accionables)", _cop(tot))
-            st.caption("Escenarios de éxito de retención: conservador 15 %, base 30 %, optimista 45 %; "
-                       "horizonte 12 meses; costo de contacto $15.000.")
+            for _, r in acc.iterrows():
+                tono = "blue" if r["tipo"] == "Proactivo" else "orange"
+                with st.container(border=True):
+                    st.markdown(f"{pill(r['id'], 'gray')}{pill(r['tipo'], tono)}{pill(r['prioridad'], 'good')}"
+                                f"<br><b>{_e(r['accionable'])}</b>", unsafe_allow_html=True)
+                    st.caption(f"Impacto anual base: {_cop(r['impacto_anual_base_cop'])} · "
+                               f"objetivo: {r['objetivo']}")
+                    with st.expander("Evidencia y métrica"):
+                        st.markdown(f"**Evidencia:** {r['evidencia']}")
+                        st.markdown(f"**Métrica de seguimiento:** {r['metrica']}")
+        with st.expander("Tabla completa"):
             vista = acc[["id", "prioridad", "accionable", "tipo", "n_objetivo", "impacto_anual_conservador_cop",
                          "impacto_anual_base_cop", "impacto_anual_optimista_cop"]].copy()
             for c_ in ["impacto_anual_conservador_cop", "impacto_anual_base_cop", "impacto_anual_optimista_cop"]:
                 vista[c_] = vista[c_].map(_cop)
             st.dataframe(vista, hide_index=True, width="stretch")
-        for _, r in acc.iterrows():
-            with st.expander(f"{r['id']} · {r['accionable']}"):
-                st.markdown(f"**Tipo:** {r['tipo']} · **Prioridad:** {r['prioridad']}")
-                st.markdown(f"**Evidencia:** {r['evidencia']}")
-                st.markdown(f"**Objetivo:** {r['objetivo']}")
-                st.markdown(f"**Métrica de seguimiento:** {r['metrica']}")
 
 # --------------------------------------------------------------------------- 6. Agente
 with tabs[5]:
     from cluster3.agents.graph import ask, resume  # import tardío: carga el grafo solo si se usa
+    from cluster3.agents.tools import TOOLS_POR_AGENTE
 
-    st.caption("Pregunta en lenguaje natural. El orquestador elige especialistas (perfilado, voz del cliente, "
-               "estrategia), un crítico verifica que cada cifra venga de una herramienta y las acciones que "
-               "exportan datos piden aprobación humana.")
+    section("Tu equipo de agentes", "El orquestador elige quién responde; el crítico verifica cada cifra; "
+                                    "exportar datos siempre pide aprobación humana")
+    equipo = ["orquestador", "perfilado", "voz_cliente", "estrategia", "critico"]
+    cols = st.columns(len(equipo))
+    for col, k in zip(cols, equipo):
+        nombre, desc = P.AGENTES_INFO[k]
+        tools_k = [f.__name__ for f in TOOLS_POR_AGENTE.get(k, [])]
+        extra = (f'<div class="at" title="{_e(", ".join(tools_k))}">🔧 {len(tools_k)} herramientas</div>'
+                 if tools_k else "")
+        col.markdown(f'<div class="agent"><div style="font-size:22px">{AVATAR[k]}</div><div class="an">{_e(nombre)}</div>'
+                     f'<div class="ad">{_e(desc)}</div>{extra}</div>', unsafe_allow_html=True)
+
     ss = st.session_state
     ss.setdefault("chat", [])
     ss.setdefault("thread", None)
     ss.setdefault("pendiente", None)
 
+    section("Conversa con los datos")
     ejemplos = [
-        "¿Cuál es la tasa de churn y de intención de cancelación del Cluster 3?",
-        "¿Qué variables explican la intención de cancelación?",
-        "¿Cuáles son los principales motivos de cancelación en las llamadas del Cluster 3?",
-        "¿Qué accionables recomiendas y cuál es su impacto económico?",
+        "Hola, ¿quién eres y en qué me ayudas?",
+        "¿Ya tienen el modelo de ML? ¿Qué tan bueno es?",
+        "¿Qué insights de negocio identificaron y qué se puede mejorar?",
+        "¿Cuáles son los principales motivos de cancelación en las llamadas?",
         "Explica el riesgo de churn del cliente 15",
         "Genera la lista de contacto del decil de mayor riesgo",
     ]
@@ -308,34 +525,53 @@ with tabs[5]:
         if cols[i % 3].button(e, key=f"ej{i}", width="stretch"):
             elegido = e
 
+    def _avatar(r: dict) -> str:
+        ag = r.get("agentes") or []
+        return AVATAR.get(ag[0], "🧭") if len(ag) == 1 else "🧭"
+
     def _mostrar(r: dict, k: int = 0) -> None:
+        ag = r.get("agentes") or []
+        crit = r.get("critica") or {}
+        badges = "".join(pill(f"{AVATAR.get(a, '')} {P.AGENTES_INFO.get(a, (a,))[0]}", TONO_AGENTE.get(a, "gray"))
+                         for a in ag if a != "conversacion")
+        if crit and ag != ["conversacion"]:
+            badges += pill("✓ Cifras verificadas" if crit.get("aprobado") else "⚠ Crítico con observaciones",
+                           "good" if crit.get("aprobado") else "warn")
+        if r.get("desde_cache"):
+            badges += pill("⚡ Respuesta en caché", "gray")
+        elif r.get("latencia_ms"):
+            badges += pill(f"⏱ {_d(r['latencia_ms'] / 1000, 1)} s", "gray")
+        if badges:
+            st.markdown(badges, unsafe_allow_html=True)
         st.markdown(r.get("respuesta") or "")
         texto = (r.get("respuesta") or "") + " ".join(r.get("evidencia") or [])
         if "Lista generada:" in texto:
             for f in sorted((config.OUT / "listas").glob("lista_contacto_*.csv")):
                 st.download_button(f"Descargar {f.name}", f.read_bytes(), file_name=f.name, mime="text/csv",
                                    key=f"dl{k}{f.name}")
-        crit = r.get("critica") or {}
-        meta = f"Agentes: {', '.join(r.get('agentes') or [])}"
-        if crit:
-            meta += f" · Crítico: {'aprobado' if crit.get('aprobado') else 'con observaciones'}"
-        st.caption(meta)
-        with st.expander("Traza y evidencia"):
-            if crit:
-                st.json(crit)
-            st.json(r.get("traza") or [])
-            for ev in (r.get("evidencia") or [])[:8]:
-                st.code(ev[:1500])
+        if r.get("traza") and ag != ["conversacion"]:
+            with st.expander("Traza y evidencia"):
+                if crit:
+                    st.json(crit)
+                st.json(r.get("traza") or [])
+                for ev in (r.get("evidencia") or [])[:8]:
+                    st.code(ev[:1500])
+
+    if not ss.chat and not ss.pendiente:
+        with st.chat_message("assistant", avatar="👋"):
+            st.markdown("¡Hola! Soy el asistente del Cluster 3. Pregúntame por los clientes, el modelo de ML, "
+                        "lo que dicen las llamadas o qué acciones tomar. Puedes empezar con uno de los ejemplos.")
 
     for i, turno in enumerate(ss.chat):
-        with st.chat_message(turno["rol"]):
-            if turno["rol"] == "user":
+        if turno["rol"] == "user":
+            with st.chat_message("user", avatar="🙂"):
                 st.markdown(turno["texto"])
-            else:
+        else:
+            with st.chat_message("assistant", avatar=_avatar(turno["r"])):
                 _mostrar(turno["r"], i)
 
     if ss.pendiente:
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🛑"):
             st.warning("Esta acción exporta datos de clientes y necesita aprobación humana.")
             st.json(ss.pendiente)
             a, b = st.columns(2)
@@ -352,11 +588,30 @@ with tabs[5]:
                 ss.chat.append({"rol": "assistant", "r": r})
                 st.rerun()
 
-    pregunta = st.chat_input("Pregunta sobre el Cluster 3") or elegido
+    pregunta = st.chat_input("Escribe tu pregunta sobre el Cluster 3") or elegido
     if pregunta and not ss.pendiente:
+        historial = [{"rol": t["rol"], "texto": t["texto"] if t["rol"] == "user" else (t["r"].get("respuesta") or "")}
+                     for t in ss.chat][-6:]
         ss.chat.append({"rol": "user", "texto": pregunta})
-        with st.spinner("Consultando agentes..."):
-            r = ask(pregunta, thread_id=None, modo=modo)
+        with st.chat_message("user", avatar="🙂"):
+            st.markdown(pregunta)
+        with st.chat_message("assistant", avatar="🧭"):
+            estado = st.empty()
+            vista = st.empty()
+            estado.markdown(pill("🧭 El orquestador está eligiendo quién responde…", "gray"), unsafe_allow_html=True)
+
+            def _evento(nodo: str, datos) -> None:
+                if nodo == "orquestador" and isinstance(datos, dict):
+                    nombres = [f"{AVATAR.get(a, '')} {P.AGENTES_INFO.get(a, (a,))[0]}" for a in datos.get("agentes") or []
+                               if a != "conversacion"]
+                    if nombres:
+                        estado.markdown(pill("Trabajando: " + " · ".join(nombres), "blue"), unsafe_allow_html=True)
+                elif nodo in ("sintesis", "directo"):
+                    estado.markdown(pill("✅ El crítico está verificando las cifras…", "gray"), unsafe_allow_html=True)
+
+            # Vista previa en vivo; al terminar se reemplaza por la respuesta verificada por el crítico.
+            r = ask(pregunta, thread_id=None, modo=modo, historial=historial,
+                    on_token=lambda t: vista.markdown(t + " ▌"), on_evento=_evento)
         ss.thread = r["thread_id"]
         if "interrupt" in r:
             ss.pendiente = r["interrupt"]
@@ -370,31 +625,37 @@ with tabs[5]:
 
 # --------------------------------------------------------------------------- 7. Evaluación
 with tabs[6]:
-    st.subheader("Sistema multiagente — preguntas doradas")
+    section("Sistema multiagente · preguntas doradas", "Ruta, cifras respaldadas, contenido esperado y aprobación humana")
     ev = _csv("agent_evals.csv")
     if ev is not None:
         res = ev[["ruta_ok", "cifras_respaldadas", "contenido_ok", "hitl_ok"]].mean()
-        c = st.columns(4)
-        for i, (k, v) in enumerate(res.items()):
-            c[i].metric(k.replace("_", " ").capitalize(), _pct(v, 0))
+        nombres = {"ruta_ok": "Ruta correcta", "cifras_respaldadas": "Cifras respaldadas",
+                   "contenido_ok": "Contenido esperado", "hitl_ok": "Aprobación humana"}
+        kpis_row([(nombres[k], _pct(v, 0), f"{_n(len(ev))} preguntas · modo {ev['modo'].iloc[0]}", "blue")
+                  for k, v in res.items()])
+        st.write("")
         st.dataframe(ev, hide_index=True, width="stretch")
         st.caption("Regenerar: `uv run python -m cluster3.agents.evals` (añade juez LLM si hay clave).")
-    st.subheader("Clasificación de llamadas — benchmark")
+    section("Clasificación de llamadas · benchmark", "Reglas vs LLM vs Jev contra la muestra etiquetada a mano")
     bench = _csv("nlp_benchmark.csv")
     if bench is not None:
         st.dataframe(bench, hide_index=True, width="stretch")
     else:
         st.info("Pendiente: etiquetar data/labels/muestra_etiquetada.csv (50 llamadas) y correr "
                 "`uv run python -m cluster3.nlp.run --llm --jev`.")
-    st.subheader("Calidad de datos")
+    section("Calidad de datos")
     cal = _json("calidad_datos.json")
     if cal:
-        c = st.columns(4)
-        c[0].metric("Filas", _n(cal.get("n_filas", 0)))
-        c[1].metric("Columnas", _n(cal.get("n_columnas", 0)))
-        c[2].metric("Duplicados", _n(cal.get("duplicados", 0) if not isinstance(cal.get("duplicados"), dict)
-                                     else sum(v for v in cal["duplicados"].values() if isinstance(v, (int, float)))))
-        c[3].metric("Constantes", _n(len(cal.get("constantes", []))))
+        dup = cal.get("duplicados", 0)
+        if isinstance(dup, dict):
+            dup = sum(v for v in dup.values() if isinstance(v, (int, float)))
+        kpis_row([
+            ("Filas", _n(cal.get("n_filas", 0)), "", ""),
+            ("Columnas", _n(cal.get("n_columnas", 0)), "", ""),
+            ("Duplicados", _n(dup), "", ""),
+            ("Variables constantes", _n(len(cal.get("constantes", []))), "eliminadas", "orange"),
+        ])
+        st.write("")
         with st.expander("Sospechas de fuga y hallazgos de consistencia"):
             st.json({k: cal.get(k) for k in ["sospecha_fuga_churn", "sospecha_fuga_intencion", "consistencia"]},
                     expanded=False)

@@ -40,6 +40,9 @@ def test_critico_acepta_formatos_y_redondeo():
     ("¿Cuál es la tasa de churn?", "perfilado"),
     ("¿Qué dicen los clientes en las llamadas?", "voz_cliente"),
     ("¿Qué accionables recomiendas?", "estrategia"),
+    ("Hola, buenas tardes", "conversacion"),
+    ("¿Ya tienen el modelo de machine learning?", "perfilado"),
+    ("¿Qué insights identificaron?", "estrategia"),
 ])
 def test_enrutamiento_por_reglas(pregunta, esperado):
     agentes, _ = route_rules(pregunta)

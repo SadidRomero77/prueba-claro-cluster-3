@@ -20,6 +20,9 @@ from cluster3.agents import prompts as P
 from cluster3.agents.graph import ask, default_mode, resume
 
 GOLDEN = [
+    {"pregunta": "Hola, ¿quién eres y en qué me puedes ayudar?", "ruta": ["conversacion"], "contiene": ["perfilado"]},
+    {"pregunta": "¿Ya tienen el modelo de machine learning? ¿Cómo funciona?", "ruta": ["perfilado"], "contiene": ["LightGBM"]},
+    {"pregunta": "¿Qué insights de negocio identificaron y qué se puede mejorar?", "ruta": ["estrategia"], "contiene": ["precio_facturacion"]},
     {"pregunta": "¿Cuál es la tasa de churn y de intención de cancelación del Cluster 3?", "ruta": ["perfilado"], "contiene": ["0.0052", "0.199"]},
     {"pregunta": "¿Qué variables explican la intención de cancelación?", "ruta": ["perfilado", "voz_cliente"], "contiene": ["VAL_VAR_RENTA"]},
     {"pregunta": "¿Qué tan bueno es el modelo de churn? Dame AUC y lift", "ruta": ["perfilado"], "contiene": ["auc"]},
@@ -48,7 +51,7 @@ def run(modo: str | None = None) -> pd.DataFrame:
     rows = []
     for g in GOLDEN:
         t0 = time.time()
-        r = ask(g["pregunta"], modo=modo)
+        r = ask(g["pregunta"], modo=modo, usar_cache=False)
         hitl = "interrupt" in r
         if hitl:
             r = resume(r["thread_id"], aprobado=False)  # en evaluación nunca se exportan datos

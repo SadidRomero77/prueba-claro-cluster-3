@@ -80,7 +80,9 @@ Los Excel originales van en `data/raw/` (no están en git).
 - `VAL_SCORE_CREDITICIO` perdió el separador decimal → `SCORE_CREDITICIO_FIX` (÷10 hasta < 1000).
 - `VAL_EQUIP_ADIC` y `VAL_UW` son más altos en cuentas no activas: se mantienen como señales a validar.
 - Un solo periodo: sin validación temporal (limitación declarada).
-- Resultados actuales: intención AUC 0,813, LIFT@10 3,7; churn AUC 0,970, LIFT@10 8,9 (93 de 104 bajas en el decil 1).
+- Resultados actuales: intención AUC 0,797, LIFT@10 3,4; churn AUC 0,974, LIFT@10 9,2 (96 de 104 bajas en el decil 1).
+- `BAN_CAMPANA_VENTA` se excluyó (misma campaña del mes que las demás `BAN_CAMPANA_*`): intención AUC 0,813 → 0,797.
+- Accionables proactivos: solo se contacta a clientes con valor esperado positivo (`_rentables` en `actions.py`).
 - NLP (reglas): precio y facturación 46,2 % de las llamadas del Cluster 3; Tigo mencionado en 34 llamadas.
 
 ## Estado

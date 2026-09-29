@@ -21,9 +21,9 @@ conversar con los datos y los modelos.
 | | Intención de cancelar | Churn |
 |---|---|---|
 | Tasa base | 19,9 % (3.981) | 0,52 % (104) |
-| AUC (CV 3×5) | 0,813 ± 0,009 | 0,970 ± 0,016 |
-| PR-AUC | 0,625 | 0,596 |
-| LIFT decil 1 | 3,7× | 8,9× (93 de 104 bajas) |
+| AUC (CV 3×5) | 0,797 ± 0,009 | 0,974 ± 0,012 |
+| PR-AUC | 0,566 | 0,588 |
+| LIFT decil 1 | 3,4× | 9,2× (96 de 104 bajas) |
 
 - Se excluyeron variables con fuga (estado de la cuenta, planes de TV con sufijo I, reincidencias, reacciones de
   retención, saldo en churn). Con ellas ambos modelos dan AUC 1,0.

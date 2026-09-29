@@ -16,6 +16,13 @@ DEFAULTS = {
     "openrouter": "anthropic/claude-sonnet-5",
     "databricks": "databricks-meta-llama-3-3-70b-instruct",
 }
+# Modelo rápido para decisiones cortas (enrutar, juzgar): baja la latencia sin tocar la calidad de las respuestas.
+DEFAULTS_RAPIDO = {
+    "anthropic": "claude-haiku-4-5-20251001",
+    "openai": "gpt-4o-mini",
+    "openrouter": "anthropic/claude-haiku-4.5",
+    "databricks": "databricks-meta-llama-3-3-70b-instruct",
+}
 KEYS = {
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
@@ -28,20 +35,24 @@ def llm_available() -> bool:
     return bool(os.getenv(KEYS.get(config.LLM_PROVIDER, ""), ""))
 
 
-def model_name() -> str:
+def model_name(rapido: bool = False) -> str:
+    if rapido:
+        return os.getenv("LLM_MODEL_RAPIDO") or DEFAULTS_RAPIDO[config.LLM_PROVIDER]
     return config.LLM_MODEL or DEFAULTS[config.LLM_PROVIDER]
 
 
-def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048):
+def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048, rapido: bool = False):
+    """rapido=True usa el modelo liviano (LLM_MODEL_RAPIDO) para enrutar y juzgar."""
     provider = config.LLM_PROVIDER
+    nombre = model_name(rapido)
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
-        return ChatAnthropic(model=model_name(), temperature=temperature, max_tokens=max_tokens)
+        return ChatAnthropic(model=nombre, temperature=temperature, max_tokens=max_tokens)
     if provider == "openai":
         from langchain_openai import ChatOpenAI
 
-        return ChatOpenAI(model=model_name(), temperature=temperature, max_tokens=max_tokens)
+        return ChatOpenAI(model=nombre, temperature=temperature, max_tokens=max_tokens)
     if provider == "openrouter":
         from langchain_openai import ChatOpenAI
 
@@ -53,7 +64,7 @@ def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048):
                 return super().with_structured_output(schema, method=method, **kw)
 
         return ChatOpenRouter(
-            model=model_name(),
+            model=nombre,
             temperature=temperature,
             max_tokens=max_tokens,
             base_url=OPENROUTER_URL,
@@ -63,5 +74,5 @@ def get_chat_model(temperature: float = 0.0, max_tokens: int = 2048):
     if provider == "databricks":
         from databricks_langchain import ChatDatabricks  # pip install databricks-langchain
 
-        return ChatDatabricks(endpoint=model_name(), temperature=temperature, max_tokens=max_tokens)
+        return ChatDatabricks(endpoint=nombre, temperature=temperature, max_tokens=max_tokens)
     raise ValueError(f"LLM_PROVIDER no soportado: {provider}")

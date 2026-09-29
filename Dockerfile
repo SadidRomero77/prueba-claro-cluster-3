@@ -15,6 +15,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
+COPY .streamlit ./.streamlit
 RUN uv pip install --system --no-cache ".[agents,llm]"
 
 RUN useradd -m app && mkdir -p outputs models data/processed data/labels docs && chown -R app /app

@@ -68,6 +68,12 @@ def _con():
     return duckdb.connect(str(config.DUCKDB_PATH), read_only=True)
 
 
+def _cur():
+    """Cursor propio por llamada: el agente ReAct ejecuta herramientas en paralelo y una conexión
+    DuckDB compartida entre hilos devuelve resultados vacíos."""
+    return _con().cursor()
+
+
 def _fmt(df: pd.DataFrame) -> str:
     return df.to_csv(index=False, float_format=lambda x: f"{x:.4g}")
 
@@ -78,7 +84,7 @@ def describir_tablas() -> str:
     out = []
     for t, desc in TABLAS.items():
         try:
-            cols = _con().execute(f"SELECT * FROM {t} LIMIT 0").df().columns.tolist()
+            cols = _cur().execute(f"SELECT * FROM {t} LIMIT 0").df().columns.tolist()
         except Exception:
             continue
         out.append(f"{t}: {desc}\n  columnas: {', '.join(cols[:60])}{' …' if len(cols) > 60 else ''}")
@@ -97,7 +103,7 @@ def consultar_sql(query: str) -> str:
     if re.search(r"(?i)\b(insert|update|delete|drop|create|alter|attach|copy|export|pragma|install|load)\b", q):
         return "ERROR: operación no permitida (solo lectura)."
     try:
-        df = _con().execute(q).df()
+        df = _cur().execute(q).df()
     except Exception as e:
         return f"ERROR SQL: {str(e)[:300]}"
     extra = f"\n(se muestran {MAX_ROWS} de {len(df)} filas)" if len(df) > MAX_ROWS else ""
@@ -115,6 +121,83 @@ def metricas_modelo(modelo: str = "intencion") -> str:
     if modelo not in ("intencion", "churn"):
         return "ERROR: modelo debe ser 'intencion' o 'churn'"
     return json.dumps(m[modelo], ensure_ascii=False, default=float)
+
+
+def resumen_modelo() -> str:
+    """Ficha del modelo predictivo de ML: estado, enfoque, validación, métricas de intención y churn,
+    variables con fuga excluidas, comparación con y sin fuga, principales variables y limitaciones."""
+    m = json.loads((config.OUT_JSON / "metricas_modelo.json").read_text(encoding="utf-8"))
+
+    def ficha(k: str) -> dict:
+        x = m[k]
+        top10 = x["matriz_top10"]
+        top = pd.read_csv(config.OUT_TAB / f"shap_{k}.csv").head(5)
+        return {
+            "target": x["target"], "n_variables": x["n_variables"], "positivos": x["positivos"],
+            "tasa_base": x["tasa_base"], "auc_cv_media": x["auc_cv_media"], "auc_cv_sd": x["auc_cv_sd"],
+            "pr_auc": x["pr_auc"], "lift_5": x["lift_5"], "lift_10": x["lift_10"],
+            "decil_1_captura": {"positivos_capturados": top10["VP"], "de": x["positivos"], "recall": top10["recall"]},
+            "top_variables": top[["variable", "direccion"]].to_dict("records"),
+        }
+
+    fuga = pd.read_csv(config.OUT_TAB / "comparacion_fuga.csv")
+    return json.dumps({
+        "estado": "Entrenado y validado como prototipo de la prueba (no está en producción). Experimentos en MLflow; "
+                  "probabilidades fuera de muestra por cliente en la tabla clientes.",
+        "enfoque": "Dos modelos LightGBM: intención de cancelar (alerta temprana) y churn (baja efectiva).",
+        "validacion": "Validación cruzada estratificada repetida 3×5; deciles y listas con probabilidades fuera de "
+                      "muestra; calibración isotónica (intención) y sigmoide (churn); explicación con SHAP por fold.",
+        "desbalance": "scale_pos_weight de LightGBM, sin SMOTE; umbral elegido por valor esperado de negocio.",
+        "intencion": ficha("intencion"),
+        "churn": ficha("churn"),
+        "con_vs_sin_fuga": fuga.to_dict("records"),
+        "variables_excluidas_por_fuga": config.LEAK_ESTADO + config.LEAK_ESTADO_TV + config.LEAK_INTENCION
+                                        + config.POST_EVENTO + config.POST_EVENTO_CHURN,
+        "limitaciones": ["Un solo periodo (202508): no hay validación temporal.",
+                         "Solo 104 bajas: el modelo de churn tiene intervalos de confianza amplios."],
+    }, ensure_ascii=False, default=float)
+
+
+def hallazgos_negocio() -> str:
+    """Insights de negocio del Cluster 3: qué se identificó y qué se puede mejorar. Combina KPIs, segmentos de
+    mayor riesgo, variables que más explican el riesgo, motivos de las llamadas, hallazgos de calidad de datos
+    y los accionables priorizados con su impacto anual base (COP)."""
+    k = json.loads(kpis_cluster())
+    seg = pd.read_csv(config.OUT_TAB / "segmentos_cluster3.csv")
+    seg = seg[seg["clientes"] >= 200]  # evita niveles con muy pocos clientes
+    nlp = json.loads((config.OUT_JSON / "nlp_insights.json").read_text(encoding="utf-8"))
+    acc = pd.read_csv(config.OUT_TAB / "accionables.csv")
+    cols_seg = ["segmento", "nivel", "clientes", "intencion_pct", "churn_pct"]
+    motivos = {m: v for m, v in nlp.get("motivos_c3_pct", {}).items() if m != "otro"}
+    fuga = pd.read_csv(config.OUT_TAB / "comparacion_fuga.csv")
+    auc_fuga = float(fuga.loc[fuga["variables"] == "con fuga", "auc"].max())
+    return json.dumps({
+        "situacion": {
+            "clientes": k["clientes"], "churn_tasa": k["churn_tasa"], "churn_n": k["churn_n"],
+            "intencion_tasa": k["intencion_tasa"], "intencion_n": k["intencion_n"],
+            "churn_si_intencion": k["churn_si_intencion"], "churn_no_intencion": k["churn_no_intencion"],
+            "renta_mensual_intencion_cop": k["renta_mensual_intencion"], "renta_mensual_churn_cop": k["renta_mensual_churn"],
+        },
+        "segmentos_mayor_intencion": seg.nlargest(3, "intencion_pct")[cols_seg].to_dict("records"),
+        "segmentos_mayor_churn": seg.nlargest(3, "churn_pct")[cols_seg].to_dict("records"),
+        "variables_clave_intencion": pd.read_csv(config.OUT_TAB / "shap_intencion.csv").head(5)[["variable", "direccion"]].to_dict("records"),
+        "variables_clave_churn": pd.read_csv(config.OUT_TAB / "shap_churn.csv").head(5)[["variable", "direccion"]].to_dict("records"),
+        "voz_del_cliente_c3": {
+            "motivos_principales_pct": dict(list(motivos.items())[:3]),
+            "precio_facturacion_otros_clusters_pct": nlp.get("motivos_otros_pct", {}).get("precio_facturacion"),
+            "urgencia_alta_pct": nlp.get("urgencia_c3_pct", {}).get("alta"),
+            "reincidencia_mencionada_pct": nlp.get("reincidencia_c3_pct"),
+            "competidores_mencionados": nlp.get("competidores_c3"),
+        },
+        "calidad_de_datos": [
+            "ESTADO_FUENTE_C es idéntica a BAN_CHURN: se excluyó; con las variables con fuga el modelo daba AUC "
+            f"{auc_fuga:.2f}".replace(".", ",") + ".",
+            "Los planes de TV con sufijo I solo aparecen en cuentas no activas: codifican estado, no plan.",
+            "VAL_SCORE_CREDITICIO perdió el separador decimal y se reescaló a 0–1000.",
+            "BAN_DESPOSICIONADO_* vale 0 en todos los registros: no se puede interpretar.",
+        ],
+        "oportunidades": acc[["id", "accionable", "tipo", "prioridad", "impacto_anual_base_cop"]].to_dict("records"),
+    }, ensure_ascii=False, default=float)
 
 
 def importancia_variables(modelo: str = "intencion", top: int = 10) -> str:
@@ -149,7 +232,7 @@ def explicar_cliente(cliente_id: int, modelo: str = "churn") -> str:
     import shap
 
     art = _model(modelo)
-    df = _con().execute(f"SELECT * FROM clientes WHERE cliente_id = {int(cliente_id)}").df()
+    df = _cur().execute(f"SELECT * FROM clientes WHERE cliente_id = {int(cliente_id)}").df()
     if df.empty:
         return f"No existe el cliente {cliente_id}"
     X = df[art["features"]]
@@ -225,7 +308,7 @@ def generar_lista_contacto(decil_max: int = 1, limite: int = 500) -> str:
     """[SENSIBLE · requiere aprobación humana] Exporta la lista de clientes de los deciles de mayor riesgo de churn."""
     q = f"""SELECT cliente_id, p_churn, p_intencion, decil_churn, VAL_RENTA_ACTUAL, riesgo_renta_cop FROM clientes
             WHERE decil_churn <= {int(decil_max)} ORDER BY p_churn DESC LIMIT {int(limite)}"""
-    df = _con().execute(q).df()
+    df = _cur().execute(q).df()
     out = config.OUT / "listas"
     out.mkdir(exist_ok=True)
     fn = out / f"lista_contacto_decil{decil_max}.csv"
@@ -234,9 +317,9 @@ def generar_lista_contacto(decil_max: int = 1, limite: int = 500) -> str:
 
 
 TOOLS_POR_AGENTE = {
-    "perfilado": [describir_tablas, consultar_sql, kpis_cluster, metricas_modelo, importancia_variables,
-                  riesgo_segmento, explicar_cliente],
+    "perfilado": [describir_tablas, consultar_sql, kpis_cluster, resumen_modelo, metricas_modelo,
+                  importancia_variables, riesgo_segmento, explicar_cliente],
     "voz_cliente": [resumen_llamadas, buscar_llamadas, consultar_sql],
-    "estrategia": [listar_accionables, calcular_impacto, kpis_cluster, generar_lista_contacto],
+    "estrategia": [hallazgos_negocio, listar_accionables, calcular_impacto, kpis_cluster, generar_lista_contacto],
 }
 ALL_TOOLS = {f.__name__: f for fs in TOOLS_POR_AGENTE.values() for f in fs}

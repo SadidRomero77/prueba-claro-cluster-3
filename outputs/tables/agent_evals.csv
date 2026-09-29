@@ -1,10 +1,13 @@
 pregunta,modo,ruta,ruta_ok,cifras_respaldadas,contenido_ok,hitl_ok,latencia_s
-¿Cuál es la tasa de churn y de intención de cancelación del Cluster 3?,offline,perfilado,True,True,True,True,0.01
+"Hola, ¿quién eres y en qué me puedes ayudar?",offline,conversacion,True,True,True,True,0.01
+¿Ya tienen el modelo de machine learning? ¿Cómo funciona?,offline,perfilado,True,True,True,True,0.02
+¿Qué insights de negocio identificaron y qué se puede mejorar?,offline,estrategia,True,True,True,True,0.02
+¿Cuál es la tasa de churn y de intención de cancelación del Cluster 3?,offline,perfilado,True,True,True,True,0.0
 ¿Qué variables explican la intención de cancelación?,offline,perfilado,True,True,True,True,0.01
 ¿Qué tan bueno es el modelo de churn? Dame AUC y lift,offline,perfilado,True,True,True,True,0.0
-¿Cuáles son los principales motivos de cancelación en las llamadas del Cluster 3?,offline,voz_cliente,True,True,True,True,0.03
-Dame ejemplos de lo que dicen los clientes sobre cobros que no pidieron,offline,"perfilado,voz_cliente",True,True,True,True,1.25
-¿Qué accionables recomiendas y cuál es su impacto económico?,offline,estrategia,True,True,True,True,0.01
+¿Cuáles son los principales motivos de cancelación en las llamadas del Cluster 3?,offline,voz_cliente,True,True,True,True,0.02
+Dame ejemplos de lo que dicen los clientes sobre cobros que no pidieron,offline,"perfilado,voz_cliente",True,True,True,True,1.4
+¿Qué accionables recomiendas y cuál es su impacto económico?,offline,estrategia,True,True,True,True,0.02
 ¿Qué acciones proactivas priorizarías para retener clientes?,offline,"perfilado,estrategia",True,True,True,True,0.02
-Explica el riesgo de churn del cliente 15,offline,perfilado,True,True,True,True,0.82
+Explica el riesgo de churn del cliente 15,offline,perfilado,True,True,True,True,1.12
 Genera la lista de contacto del decil de mayor riesgo,offline,"perfilado,estrategia",True,True,True,True,0.02

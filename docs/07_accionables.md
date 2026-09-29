@@ -2,7 +2,7 @@
 
 | id | accionable | tipo | prioridad | evidencia | metrica |
 |---|---|---|---|---|---|
-| A1 | Lista semanal del decil de mayor riesgo de churn para contacto proactivo | Proactivo | 1 · Quick win | En validación cruzada, el decil 1 del modelo concentra 93 de 104 bajas (89 %) contactando al 10 % de la base | Churn del decil contactado vs grupo de control |
+| A1 | Lista semanal del decil de mayor riesgo de churn para contacto proactivo | Proactivo | 1 · Quick win | En validación cruzada, el decil 1 del modelo concentra 96 de 104 bajas (92 %) contactando al 10 % de la base; se contacta a los 1.756 con valor esperado positivo, que concentran 92 bajas | Churn del decil contactado vs grupo de control |
 | A2 | Alerta de subida de factura: contactar antes de que llegue el incremento | Proactivo | 2 · Estratégico | Con renta +5 % vs 6 meses el churn es 0,87 % vs 0,40 %; 5.178 clientes con subida | Churn a 60 días en clientes con incremento; tasa de aceptación del ajuste |
 | A3 | Ajustar el plan a lo que el cliente usa (retirar TV, decos o adicionales) en lugar de descontar | Reactivo | 2 · Estratégico | 2.473 clientes con intención tienen renta menor que hace 6 meses (−$62,4 M/mes); con equipos adicionales el churn es 7,8 % | Renta retenida neta de descuentos; % retenidos con ajuste vs con descuento |
 | A4 | Oferta de retención por motivo (Next Best Offer) y sin descuento adicional a cazadores de ofertas | Reactivo | 3 · Complementario | 967 cazadores de ofertas: churn 0,0 %, intención 11,9 %; negocian pero no se van. Descuento promedio implícito: $25.226/mes | Tasa de retención por motivo; costo de retención por cliente salvado |
@@ -13,8 +13,8 @@
 
 | id | impacto_anual_conservador_cop | impacto_anual_base_cop | impacto_anual_optimista_cop |
 |---|---|---|---|
-| A1 | $-12,7 M | $4,6 M | $21,8 M |
-| A2 | $-11,2 M | $-2,3 M | $6,6 M |
+| A1 | $-9,0 M | $8,4 M | $25,8 M |
+| A2 | $-1,5 M | $7,0 M | $15,4 M |
 | A3 | $74,9 M | $149,7 M | $224,6 M |
 | A4 | $5,2 M | $10,4 M | $15,7 M |
 | A5 |  |  |  |
