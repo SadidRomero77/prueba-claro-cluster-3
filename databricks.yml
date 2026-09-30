@@ -50,8 +50,28 @@ resources:
   apps:
     cluster3_app:
       name: cluster3-churn
-      description: Dashboard + chat con el sistema multiagente del Cluster 3
+      description: Dashboard, sistema multiagente y copiloto del asesor del Cluster 3
       source_code_path: .
+      # Recursos que la app puede usar con su service principal (permiso mínimo). app.yaml los lee con valueFrom.
+      resources:
+        - name: openrouter-key
+          description: Clave de OpenRouter (LLM de agentes y copiloto)
+          secret:
+            scope: cluster3
+            key: OPENROUTER_API_KEY
+            permission: READ
+        - name: typesafe-key
+          description: Clave de Jev (TypeSafe AI)
+          secret:
+            scope: cluster3
+            key: TYPESAFE_API_KEY
+            permission: READ
+        - name: artefactos
+          description: Artefactos del pipeline (tablas, modelos, figuras) que descarga la app al arrancar
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.artefactos
+            securable_type: VOLUME
+            permission: READ_VOLUME
 
 targets:
   dev:
