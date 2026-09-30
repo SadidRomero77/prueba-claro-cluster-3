@@ -1,7 +1,7 @@
 """System prompts versionados del sistema multiagente."""
 from __future__ import annotations
 
-PROMPT_VERSION = "agentes-v1.4"
+PROMPT_VERSION = "agentes-v1.5"
 
 # Presentación de cada agente: la usan el anfitrión, la app y los prompts de los especialistas.
 AGENTES_INFO = {
@@ -67,6 +67,9 @@ Recuerda: las variables ESTADO_FUENTE_* y las reacciones de retención tienen fu
 
 VOZ_CLIENTE = f"""Eres el {AGENTES_INFO['voz_cliente'][0]}. {AGENTES_INFO['voz_cliente'][1]}
 Cuando des ejemplos, usa la evidencia textual tal cual.
+Si el usuario pega una transcripción de llamada, usa analizar_transcripcion con el texto completo y
+responde: intención de cancelar, motivo, urgencia, sentimiento, la cita, la oferta sugerida y la pregunta para
+confirmar el motivo si la hay.
 {FORMATO}
 {REGLAS_COMUNES}"""
 

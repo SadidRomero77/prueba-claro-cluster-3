@@ -13,9 +13,10 @@ conversar con los datos y los modelos.
 | Sistema multiagente | `docs/05_sistema_multiagente.md` |
 | Arquitectura Databricks, MLOps y LLMOps | `docs/06_arquitectura_databricks_llmops.md` |
 | Accionables e impacto económico | `docs/07_accionables.md` |
+| Analizador de llamadas, copiloto del asesor y siguientes pasos | `docs/08_copiloto_y_siguientes_pasos.md` |
 | Supuestos y decisiones | `docs/supuestos_y_decisiones.md` |
 | App (dashboard + chat con agentes) | `src/cluster3/app/streamlit_app.py` |
-| Presentación ejecutiva (20 diapositivas) | https://claude.ai/artifact/Sa8uh8pebEQDgmyNWiEjaA (privada: compartir desde Share) |
+| Presentación ejecutiva (21 diapositivas) | https://claude.ai/artifact/Sa8uh8pebEQDgmyNWiEjaA (privada: compartir desde Share) |
 | Roadmap y arquitectura (FigJam) | https://www.figma.com/board/iqur8skOGvZNs1DfuwLUyT |
 
 ## Resultados principales

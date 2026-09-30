@@ -60,6 +60,7 @@ class JevClassifier:
                 instructions="¿Cómo se siente el cliente durante la llamada?",
                 criteria=["Enojado o frustrado", "Molesto", "Neutral", "Conforme", "Satisfecho"],
             ),
+            "intencion_cancelar": Noul(instructions="¿El cliente quiere cancelar o dar de baja el servicio?"),
             "competidor": Noul(instructions="¿El cliente dice que se va o tiene oferta de otro operador?"),
             "reincidencia": Noul(instructions="¿El cliente dice que ya había reclamado antes por lo mismo?"),
         }
@@ -82,6 +83,7 @@ class JevClassifier:
             "jev_urgencia": ["baja", "media", "alta"][min(2, max(0, round(float(_field(u, "score", default=1)))))],
             "jev_urgencia_score": _field(u, "score"),
             "jev_sentimiento": round((float(score_s) / (len(levels_s) - 1)) * 2 - 1, 3),
+            "jev_intencion_prob": _field(_get(resp, "intencion_cancelar"), "noul"),
             "jev_competidor_prob": _field(_get(resp, "competidor"), "noul"),
             "jev_reincidencia_prob": _field(_get(resp, "reincidencia"), "noul"),
             "jev_latencia_s": round(time.time() - t0, 3),

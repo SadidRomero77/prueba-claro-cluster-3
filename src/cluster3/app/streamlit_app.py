@@ -342,7 +342,7 @@ st.markdown(
 )
 
 tabs = st.tabs(["🏠 Resumen", "🧩 Segmentos", "🤖 Modelo ML", "🎧 Voz del cliente", "🎯 Accionables",
-                "💬 Agente", "🧪 Evaluación"])
+                "💬 Agente", "📞 Copiloto", "🧪 Evaluación"])
 
 # --------------------------------------------------------------------------- 1. Resumen
 with tabs[0]:
@@ -409,6 +409,7 @@ with tabs[0]:
         ("🎧", "Voz del cliente · ¿por qué?", "Motivos, urgencia y frases reales de las llamadas."),
         ("🎯", "Accionables · ¿qué hacer?", "Acciones priorizadas y su impacto en pesos por escenario."),
         ("💬", "Agente · pregúntale", "Conversa con los datos; cada cifra viene de una herramienta."),
+        ("📞", "Copiloto · en la llamada", "Analiza una llamada o guía al asesor turno a turno: motivo, oferta y guion."),
         ("🧪", "Evaluación · ¿es confiable?", "Cómo se validaron el NLP y el sistema de agentes."),
     ])
 
@@ -825,8 +826,153 @@ with tabs[5]:
         ss.chat, ss.thread, ss.pendiente = [], None, None
         st.rerun()
 
-# --------------------------------------------------------------------------- 7. Evaluación
+# --------------------------------------------------------------------------- 7. Copiloto
 with tabs[6]:
+    from cluster3.nlp import analizador as AN
+
+    guia("Dos herramientas para el área de cancelaciones. **Analizar una llamada**: pegas una transcripción y obtienes "
+         "la intención de cancelar, el motivo, la urgencia, el sentimiento, la cita que lo prueba y la oferta sugerida. "
+         "**Copiloto en vivo**: acompaña al asesor turno a turno; si el motivo no está claro le propone una pregunta "
+         "para hacerle al cliente, y le sugiere la oferta y el guion.",
+         "el copiloto **sugiere** y el asesor **decide**. Si el cliente insiste en cancelar, la alerta pide respetar su "
+         "decisión. Usa el método híbrido validado con 50 llamadas etiquetadas (Jev + LLM); sin claves responde con reglas.")
+
+    @st.cache_data(show_spinner=False)
+    def _ejemplos_llamadas() -> dict[str, str]:
+        """Una llamada real del Cluster 3 por motivo, para probar sin pegar texto."""
+        if not (config.T_LLAMADAS_ANALISIS.exists() and config.T_LLAMADAS_LIMPIAS.exists()):
+            return {}
+        an = pd.read_parquet(config.T_LLAMADAS_ANALISIS)
+        an = an[(an["cluster"] == config.CLUSTER_CRITICO) & (an["calidad_transcripcion"].isin(["alta", "media"]))]
+        textos = pd.read_parquet(config.T_LLAMADAS_LIMPIAS).set_index("id_llamada")["texto_anonimizado"]
+        elegidas = an.sort_values("confianza", ascending=False).groupby("motivo").head(1)
+        return {f"Llamada {int(r.id_llamada)} · {r.motivo}": textos[r.id_llamada] for r in elegidas.itertuples()}
+
+    def _ficha(r: dict, clave: str) -> None:
+        kpis_row([
+            ("Intención de cancelar", _pct(r["intencion_cancelar_prob"], 0), f"fuente: {r['fuentes'].get('intencion')}",
+             "orange" if r["intencion_cancelar_prob"] >= 0.5 else ""),
+            ("Motivo", r["motivo"], r["submotivo"], "blue"),
+            ("Urgencia", r["urgencia"], "alta = resolver hoy", "orange" if r["urgencia"] == "alta" else ""),
+            ("Sentimiento inicio → fin", f"{_d(r['sentimiento_inicio'], 2)} → {_d(r['sentimiento_fin'], 2)}",
+             f"global {_d(r['sentimiento_global'], 2)} (−1 a 1)", ""),
+        ])
+        st.write("")
+        if r.get("pregunta_sugerida"):
+            st.markdown(f'<div class="guide" style="border-left-color:{ORANGE}; background:#fdeee7; border-color:#f3c9b6">'
+                        f'<div class="gt" style="color:#a84113">🔎 Pregúntale al cliente</div>'
+                        f'<div class="gx">{_e(r["pregunta_sugerida"])}</div></div>', unsafe_allow_html=True)
+        for a in r.get("alertas") or []:
+            st.warning(a, icon="⚠️")
+        c1, c2 = st.columns([3, 2])
+        with c1:
+            ctx = r.get("contexto_c3")
+            extra = (f"<div class='cx' style='margin-top:6px'>En el Cluster 3 este motivo es el "
+                     f"<b>{_d(ctx['pct_llamadas_c3'], 1)} %</b> de las llamadas y se retiene al "
+                     f"<b>{_d(ctx['retenido_pct_c3'], 1)} %</b>.</div>") if ctx else ""
+            acc_txt = f"<div class='cx' style='margin-top:6px'>Accionable: {_e(r['accionable_relacionado'])}</div>" \
+                if r.get("accionable_relacionado") else ""
+            st.markdown(f'<div class="card"><div class="ic">💡</div><div class="ct">Oferta sugerida</div>'
+                        f'<div class="cx">{_e(r["oferta_sugerida"])}</div>{acc_txt}{extra}</div>', unsafe_allow_html=True)
+            if r.get("guion"):
+                st.markdown(f'<div class="card" style="margin-top:12px"><div class="ic">🗣️</div><div class="ct">Guion '
+                            f'sugerido</div><div class="cx">{_e(r["guion"])}</div></div>', unsafe_allow_html=True)
+            if r.get("evidencia"):
+                ver = {True: " · cita verificada", False: " · cita no verificada"}.get(r.get("evidencia_verificada"), "")
+                st.markdown(f'<div class="quote">“{_e(str(r["evidencia"])[:320])}”<div class="qm">evidencia del motivo'
+                            f'{ver}</div></div>', unsafe_allow_html=True)
+        with c2:
+            probs = r.get("motivo_probabilidades") or {}
+            if probs:
+                dp = pd.DataFrame({"motivo": list(probs), "prob": [float(v) for v in probs.values()]})
+                dp = dp[dp["prob"] > 0].sort_values("prob", ascending=False)
+                st.markdown("**Probabilidad por motivo (Jev)**")
+                st.altair_chart(
+                    alt.Chart(dp).mark_bar(cornerRadiusEnd=4, color=BLUE).encode(
+                        y=alt.Y("motivo:N", sort="-x", title=None, axis=alt.Axis(labelColor=INK2, ticks=False, domain=False)),
+                        x=alt.X("prob:Q", title=None, scale=alt.Scale(domain=[0, 1]),
+                                axis=alt.Axis(format="%", gridColor=GRID, labelColor=INK2, domain=False, ticks=False)),
+                        tooltip=["motivo:N", alt.Tooltip("prob:Q", format=".0%")],
+                    ).properties(height=max(120, 34 * len(dp))).configure_view(stroke=None)
+                    .configure(background="transparent"), width="stretch")
+            if r.get("emociones"):
+                st.markdown("**Emociones:** " + ", ".join(r["emociones"]))
+            st.caption("Fuentes: " + " · ".join(f"{k}: {v}" for k, v in r["fuentes"].items()))
+            if r.get("errores"):
+                st.caption("Avisos: " + "; ".join(r["errores"]))
+            st.download_button("Descargar JSON", json.dumps(r, ensure_ascii=False, indent=2, default=str),
+                               file_name="analisis_llamada.json", mime="application/json", key=f"dl_{clave}")
+
+    ejemplos_ll = _ejemplos_llamadas()
+    modo_c = st.radio("Modo", ["Analizar una llamada", "Copiloto en vivo"], horizontal=True, key="modo_copiloto")
+    ss = st.session_state
+
+    if modo_c == "Analizar una llamada":
+        section("Analizar una llamada", "Pega la transcripción (con o sin 'Cliente:' / 'Asesor:'), sube un .txt o usa un ejemplo")
+        e1, e2 = st.columns([2, 1])
+        with e1:
+            elegido_ej = st.selectbox("Usar una llamada real de ejemplo", ["(ninguna)"] + list(ejemplos_ll))
+        with e2:
+            archivo = st.file_uploader("o sube un .txt", type=["txt"])
+        texto_def = ejemplos_ll.get(elegido_ej, "")
+        if archivo is not None:
+            texto_def = archivo.read().decode("utf-8", errors="ignore")
+        texto_ll = st.text_area("Transcripción", value=texto_def, height=220,
+                                placeholder="Cliente: Quiero cancelar, me llegó un cobro que no reconozco…")
+        if st.button("Analizar llamada", type="primary"):
+            try:
+                with st.spinner("Analizando con Jev y el LLM…"):
+                    ss.analisis_llamada = AN.analizar_llamada(texto_ll)
+            except ValueError as e:
+                st.error(str(e))
+        if ss.get("analisis_llamada"):
+            section("Resultado")
+            _ficha(ss.analisis_llamada, "analisis")
+
+    else:
+        ss.setdefault("cop_turnos", [])
+        ss.setdefault("cop_fuente", None)
+        section("Copiloto en vivo", "Registra lo que dice cada uno, o simula con una llamada real turno a turno")
+        izq, der = st.columns([1, 1])
+        with izq:
+            s1, s2 = st.columns([2, 1])
+            with s1:
+                sim = st.selectbox("Simular con una llamada real", ["(ninguna)"] + list(ejemplos_ll), key="cop_sim")
+            with s2:
+                st.write("")
+                if st.button("Siguiente turno", disabled=sim == "(ninguna)", width="stretch"):
+                    if ss.cop_fuente != sim:
+                        ss.cop_fuente, ss.cop_turnos, ss.cop_pendientes = sim, [], AN.turnos_de_llamada(ejemplos_ll[sim])
+                    if ss.get("cop_pendientes"):
+                        ss.cop_turnos.append(ss.cop_pendientes.pop(0))
+            for t in ss.cop_turnos[-12:]:
+                with st.chat_message("user" if t["rol"] == "cliente" else "assistant",
+                                     avatar="🙂" if t["rol"] == "cliente" else "🎧"):
+                    st.markdown(f"**{t['rol'].capitalize()}:** {t['texto']}")
+            with st.form("cop_form", clear_on_submit=True):
+                rol = st.radio("Quién habla", ["cliente", "asesor"], horizontal=True, format_func=str.capitalize)
+                nuevo = st.text_input("Texto del turno", placeholder="Lo que dijo el cliente o el asesor")
+                if st.form_submit_button("Agregar turno") and nuevo.strip():
+                    ss.cop_turnos.append({"rol": rol, "texto": nuevo.strip()})
+            if ss.cop_turnos and st.button("Nueva llamada"):
+                ss.cop_turnos, ss.cop_fuente, ss.cop_resultado = [], None, None
+                st.rerun()
+        with der:
+            hay_cliente = sum(len(t["texto"]) for t in ss.cop_turnos if t["rol"] == "cliente") >= AN.MIN_CARACTERES
+            if not hay_cliente:
+                st.info("El copiloto se activa cuando el cliente ha dicho algo (al menos una frase).")
+            else:
+                firma = (len(ss.cop_turnos), ss.cop_turnos[-1]["texto"])
+                if ss.get("cop_firma") != firma:
+                    with st.spinner("El copiloto está leyendo la llamada…"):
+                        ss.cop_resultado = AN.copiloto(ss.cop_turnos, usar_llm=hay_llm and modo == "llm",
+                                                       modelo=modelo_elegido)
+                    ss.cop_firma = firma
+                if ss.get("cop_resultado"):
+                    _ficha(ss.cop_resultado, "copiloto")
+
+# --------------------------------------------------------------------------- 8. Evaluación
+with tabs[7]:
     guia("Cómo se comprobó que lo que muestra el panel es confiable: (1) la clasificación de llamadas se midió contra "
          "llamadas etiquetadas a mano, (2) el sistema de agentes se prueba con preguntas doradas de respuesta conocida "
          "y (3) los datos pasaron por controles de calidad y de fuga de información.",

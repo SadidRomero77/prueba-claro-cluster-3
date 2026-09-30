@@ -32,6 +32,10 @@ GOLDEN = [
     {"pregunta": "¿Qué acciones proactivas priorizarías para retener clientes?", "ruta": ["estrategia"], "contiene": ["Proactivo"]},
     {"pregunta": "Explica el riesgo de churn del cliente 15", "ruta": ["perfilado"], "contiene": ["probabilidad"]},
     {"pregunta": "Genera la lista de contacto del decil de mayor riesgo", "ruta": ["estrategia"], "contiene": [], "hitl": True},
+    {"pregunta": "Analiza esta llamada:\nAsesor: Buenas tardes, área de cancelaciones.\nCliente: Quiero cancelar. Me "
+                 "cobraron un paquete que nunca pedí y ya es la tercera vez que llamo por lo mismo.\nAsesor: Permítame "
+                 "revisar.\nCliente: Siempre me dicen que lo quitan y vuelve a aparecer.",
+     "ruta": ["voz_cliente"], "contiene": ["intencion_cancelar_prob", "oferta_sugerida"]},
 ]
 
 

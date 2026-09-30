@@ -74,7 +74,15 @@ RULES = {
 }
 
 
+def es_transcripcion(q: str) -> bool:
+    """El usuario pegó una llamada: texto largo o con turnos marcados (Cliente:/Asesor:)."""
+    turnos = re.search(r"(?im)^\s*(cliente|asesor|agente|agent|client|usuario)\s*:", q)
+    return len(q) > 600 or (len(q) > 120 and bool(turnos))
+
+
 def route_rules(q: str) -> tuple[list[str], str]:
+    if es_transcripcion(q):
+        return ["voz_cliente"], "transcripción pegada: análisis de la llamada"
     ag = [a for a in AGENTES if re.search(RULES[a], q, re.I)]
     if not ag and re.search(SALUDO, q, re.I):
         return ["conversacion"], "saludo o charla (reglas)"
@@ -90,7 +98,10 @@ def orquestador(state: State) -> dict:
     t0 = time.time()
     q = state["pregunta"]
     autonoma = q
-    if state.get("modo") == "llm":
+    if es_transcripcion(q):
+        # Una llamada pegada va directo al agente de voz del cliente, con el texto completo (sin reescribirlo).
+        ag, motivo = ["voz_cliente"], "transcripción pegada: análisis de la llamada"
+    elif state.get("modo") == "llm":
         hist = _historial_txt(state)
         user = f"Historial reciente:\n{hist}\n\nPregunta actual: {q}" if hist else q
         r: Ruta = llm_factory.get_chat_model(rapido=True).with_structured_output(Ruta).invoke(
@@ -122,6 +133,8 @@ def _offline_calls(agente: str, q: str) -> list[tuple[str, dict]]:
             return [("resumen_modelo", {})]
         return [("kpis_cluster", {})]
     if agente == "voz_cliente":
+        if es_transcripcion(q):
+            return [("analizar_transcripcion", {"texto": q, "usar_api": False})]
         calls = [("resumen_llamadas", {"cluster": 3})]
         if re.search(r"ejemplo|dicen|cita|busca", ql):
             calls.append(("buscar_llamadas", {"texto": q, "k": 3}))

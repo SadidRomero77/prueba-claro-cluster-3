@@ -280,6 +280,20 @@ def buscar_llamadas(texto: str, k: int = 3, motivo: str | None = None) -> str:
     return _fmt(res[["id_llamada", "cluster", "motivo", "submotivo", "urgencia", "evidencia", "similitud"]])
 
 
+def analizar_transcripcion(texto: str, usar_api: bool = True) -> str:
+    """Analiza una transcripción de llamada que pega el usuario (texto completo, con o sin 'Cliente:'/'Asesor:').
+    Devuelve intención de cancelar (probabilidad), motivo, submotivo, urgencia, sentimiento inicio→fin, cita textual,
+    oferta sugerida, accionable relacionado, pregunta para confirmar el motivo, alertas y contexto del Cluster 3."""
+    from cluster3.nlp.analizador import analizar_llamada
+
+    # usar_api=False (modo offline del grafo): solo reglas, sin llamar a Jev ni al LLM
+    r = analizar_llamada(texto, **({} if usar_api else {"usar_llm": False, "usar_jev": False}))
+    campos = ["intencion_cancelar_prob", "motivo", "submotivo", "urgencia", "sentimiento_inicio", "sentimiento_fin",
+              "sentimiento_global", "emociones", "evidencia", "evidencia_verificada", "oferta_sugerida",
+              "accionable_relacionado", "pregunta_sugerida", "alertas", "contexto_c3", "fuentes"]
+    return json.dumps({k: r.get(k) for k in campos}, ensure_ascii=False, default=float)
+
+
 def listar_accionables(tipo: str | None = None) -> str:
     """Accionables priorizados con evidencia, métrica e impacto anual (COP) por escenario. tipo: Proactivo | Reactivo."""
     df = pd.read_csv(config.OUT_TAB / "accionables.csv")
@@ -319,7 +333,7 @@ def generar_lista_contacto(decil_max: int = 1, limite: int = 500) -> str:
 TOOLS_POR_AGENTE = {
     "perfilado": [describir_tablas, consultar_sql, kpis_cluster, resumen_modelo, metricas_modelo,
                   importancia_variables, riesgo_segmento, explicar_cliente],
-    "voz_cliente": [resumen_llamadas, buscar_llamadas, consultar_sql],
+    "voz_cliente": [resumen_llamadas, buscar_llamadas, analizar_transcripcion, consultar_sql],
     "estrategia": [hallazgos_negocio, listar_accionables, calcular_impacto, kpis_cluster, generar_lista_contacto],
 }
 ALL_TOOLS = {f.__name__: f for fs in TOOLS_POR_AGENTE.values() for f in fs}

@@ -41,7 +41,7 @@ Los Excel originales van en `data/raw/` (no están en git).
 | `src/cluster3/data/` | `load.py`, `quality.py` (hallazgos, AUC univariado, diccionario), `clean.py` (registro de decisiones por variable) |
 | `src/cluster3/eda/profile.py` | KPIs, 12 segmentos, figuras, paleta |
 | `src/cluster3/models/churn.py` | Dos etapas LightGBM, CV 3×5, calibración, SHAP por fold, lift, umbral de negocio, MLflow |
-| `src/cluster3/nlp/` | preprocesamiento (PII, roles), taxonomía v1.0, reglas, LLM con RAG few-shot, Jev, evaluación, etiquetado |
+| `src/cluster3/nlp/` | preprocesamiento (PII, roles), taxonomía v1.1, reglas, LLM con RAG few-shot, Jev, evaluación, etiquetado, `analizador.py` (analizar una llamada y copiloto del asesor) |
 | `src/cluster3/business/actions.py` | Accionables A1–A6, impacto en tres escenarios, matriz impacto/esfuerzo |
 | `src/cluster3/agents/` | `tools.py` (DuckDB solo lectura), `prompts.py`, `graph.py` (LangGraph), `evals.py` |
 | `src/cluster3/app/streamlit_app.py` | Dashboard + chat con HITL + evaluación |
@@ -92,7 +92,10 @@ Los Excel originales van en `data/raw/` (no están en git).
 
 Hecho: pipeline completo, modelos, NLP híbrido validado contra 50 etiquetas humanas, accionables, docs, grafo
 multiagente (conversación, streaming, selector de modelo) con evals (offline 100 %; con LLM: ruta 100 %,
-cifras respaldadas 92 %, juez 4,75/5 en fidelidad), app Streamlit guiada, repo público, deck en Artifact Slides.
+cifras respaldadas 92 %, juez 4,46/5 en fidelidad; 13 preguntas), app Streamlit guiada, repo público, deck en Artifact Slides.
+
+Fase 1 del copiloto hecha: pestaña Copiloto (analizar llamada + copiloto en vivo) y herramienta
+`analizar_transcripcion` en el chat. Fase 2 (agente de retención) documentada en `docs/08`.
 
 Pendiente, en este orden:
 1. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
