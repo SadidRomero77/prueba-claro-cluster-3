@@ -832,8 +832,8 @@ with tabs[6]:
 
     guia("Dos herramientas para el área de cancelaciones. **Analizar una llamada**: pegas una transcripción y obtienes "
          "la intención de cancelar, el motivo, la urgencia, el sentimiento, la cita que lo prueba y la oferta sugerida. "
-         "**Copiloto en vivo**: acompaña al asesor turno a turno; si el motivo no está claro le propone una pregunta "
-         "para hacerle al cliente, y le sugiere la oferta y el guion.",
+         "**Copiloto (chat)**: el asesor le cuenta el caso con sus palabras y el copiloto conversa con él: le dice qué "
+         "está pasando, qué preguntarle al cliente y qué ofrecerle, con una frase lista para decir.",
          "el copiloto **sugiere** y el asesor **decide**. Si el cliente insiste en cancelar, la alerta pide respetar su "
          "decisión. Usa el método híbrido validado con 50 llamadas etiquetadas (Jev + LLM); sin claves responde con reglas.")
 
@@ -904,7 +904,7 @@ with tabs[6]:
                                file_name="analisis_llamada.json", mime="application/json", key=f"dl_{clave}")
 
     ejemplos_ll = _ejemplos_llamadas()
-    modo_c = st.radio("Modo", ["Analizar una llamada", "Copiloto en vivo"], horizontal=True, key="modo_copiloto")
+    modo_c = st.radio("Modo", ["Analizar una llamada", "Copiloto (chat)"], horizontal=True, key="modo_copiloto")
     ss = st.session_state
 
     if modo_c == "Analizar una llamada":
@@ -930,46 +930,60 @@ with tabs[6]:
             _ficha(ss.analisis_llamada, "analisis")
 
     else:
-        ss.setdefault("cop_turnos", [])
-        ss.setdefault("cop_fuente", None)
-        section("Copiloto en vivo", "Registra lo que dice cada uno, o simula con una llamada real turno a turno")
-        izq, der = st.columns([1, 1])
-        with izq:
-            s1, s2 = st.columns([2, 1])
-            with s1:
-                sim = st.selectbox("Simular con una llamada real", ["(ninguna)"] + list(ejemplos_ll), key="cop_sim")
-            with s2:
-                st.write("")
-                if st.button("Siguiente turno", disabled=sim == "(ninguna)", width="stretch"):
-                    if ss.cop_fuente != sim:
-                        ss.cop_fuente, ss.cop_turnos, ss.cop_pendientes = sim, [], AN.turnos_de_llamada(ejemplos_ll[sim])
-                    if ss.get("cop_pendientes"):
-                        ss.cop_turnos.append(ss.cop_pendientes.pop(0))
-            for t in ss.cop_turnos[-12:]:
-                with st.chat_message("user" if t["rol"] == "cliente" else "assistant",
-                                     avatar="🙂" if t["rol"] == "cliente" else "🎧"):
-                    st.markdown(f"**{t['rol'].capitalize()}:** {t['texto']}")
-            with st.form("cop_form", clear_on_submit=True):
-                rol = st.radio("Quién habla", ["cliente", "asesor"], horizontal=True, format_func=str.capitalize)
-                nuevo = st.text_input("Texto del turno", placeholder="Lo que dijo el cliente o el asesor")
-                if st.form_submit_button("Agregar turno") and nuevo.strip():
-                    ss.cop_turnos.append({"rol": rol, "texto": nuevo.strip()})
-            if ss.cop_turnos and st.button("Nueva llamada"):
-                ss.cop_turnos, ss.cop_fuente, ss.cop_resultado = [], None, None
-                st.rerun()
-        with der:
-            hay_cliente = sum(len(t["texto"]) for t in ss.cop_turnos if t["rol"] == "cliente") >= AN.MIN_CARACTERES
-            if not hay_cliente:
-                st.info("El copiloto se activa cuando el cliente ha dicho algo (al menos una frase).")
+        ss.setdefault("cop_chat", [])
+        section("Copiloto del asesor", "Cuéntale el caso con tus palabras, como a un colega; recuerda lo que ya le dijiste")
+
+        def _chips(a: dict) -> str:
+            if not a:
+                return ""
+            tono_int = "orange" if a["intencion_cancelar_prob"] >= 0.5 else "gray"
+            chips = [pill(f"Intención de cancelar {_pct(a['intencion_cancelar_prob'], 0)}", tono_int),
+                     pill(f"Motivo: {a['motivo']}", "blue"),
+                     pill(f"Urgencia {a['urgencia']}", "orange" if a["urgencia"] == "alta" else "gray")]
+            if a.get("accionable_relacionado"):
+                chips.append(pill(a["accionable_relacionado"].split(" · ")[0], "good"))
+            return "".join(chips)
+
+        if not ss.cop_chat:
+            with st.chat_message("assistant", avatar="🧭"):
+                st.markdown(AN.SALUDO_CHAT)
+            ejemplos_cop = ["El cliente dice que quiere otro plan porque no usa los datos",
+                            "Tengo un cliente que llama porque el internet se le cae todas las noches",
+                            "La cliente dice que la factura le subió y no sabe por qué"]
+            cols_ej = st.columns(3)
+            for i, e in enumerate(ejemplos_cop):
+                if cols_ej[i].button(e, key=f"cop_ej{i}", width="stretch"):
+                    ss.cop_pendiente = e
+        for i, m in enumerate(ss.cop_chat):
+            if m["rol"] == "asesor":
+                with st.chat_message("user", avatar="🎧"):
+                    st.markdown(m["texto"])
             else:
-                firma = (len(ss.cop_turnos), ss.cop_turnos[-1]["texto"])
-                if ss.get("cop_firma") != firma:
-                    with st.spinner("El copiloto está leyendo la llamada…"):
-                        ss.cop_resultado = AN.copiloto(ss.cop_turnos, usar_llm=hay_llm and modo == "llm",
-                                                       modelo=modelo_elegido)
-                    ss.cop_firma = firma
-                if ss.get("cop_resultado"):
-                    _ficha(ss.cop_resultado, "copiloto")
+                with st.chat_message("assistant", avatar="🧭"):
+                    if m.get("analisis"):
+                        st.markdown(_chips(m["analisis"]), unsafe_allow_html=True)
+                    st.markdown(m["texto"])
+                    if m.get("analisis"):
+                        with st.expander("Ficha del caso"):
+                            _ficha(m["analisis"], f"cop{i}")
+                    st.caption(f"Fuente: {m.get('fuente', '')}")
+
+        nuevo = st.chat_input("Cuéntale al copiloto qué pasa con el cliente…", key="cop_input") or ss.pop("cop_pendiente", None)
+        if nuevo:
+            ss.cop_chat.append({"rol": "asesor", "texto": nuevo})
+            with st.chat_message("user", avatar="🎧"):
+                st.markdown(nuevo)
+            with st.chat_message("assistant", avatar="🧭"):
+                vista_cop = st.empty()
+                vista_cop.markdown(pill("🧭 Analizando el caso…", "gray"), unsafe_allow_html=True)
+                out = AN.copiloto_chat(ss.cop_chat, usar_llm=hay_llm and modo == "llm", modelo=modelo_elegido,
+                                       on_token=lambda t: vista_cop.markdown(t + " ▌"))
+            ss.cop_chat.append({"rol": "copiloto", "texto": out["respuesta"], "analisis": out["analisis"],
+                                "fuente": out["fuente"]})
+            st.rerun()
+        if ss.cop_chat and st.button("Nuevo caso"):
+            ss.cop_chat = []
+            st.rerun()
 
 # --------------------------------------------------------------------------- 8. Evaluación
 with tabs[7]:

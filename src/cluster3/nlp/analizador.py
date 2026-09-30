@@ -7,6 +7,9 @@
 - copiloto(turnos): acompaña al asesor mientras transcurre la llamada. Con cada turno actualiza el motivo probable,
   la urgencia y el sentimiento; si el motivo no está claro le propone al asesor una pregunta para identificarlo;
   sugiere la oferta y el guion, y alerta cuando hay que respetar la decisión de cancelar.
+- copiloto_chat(mensajes): el asesor le cuenta el caso en lenguaje natural ("el cliente quiere otro plan porque no
+  usa los datos") y el copiloto conversa con él: analiza lo que sabe del cliente, pregunta lo que falta, recomienda
+  la oferta y le da una frase para el cliente. Responde en streaming.
 
 Decide una persona: el copiloto sugiere, no ejecuta ni ofrece nada por su cuenta.
 """
@@ -33,7 +36,10 @@ INTENCION_RE = (r"(cancelar|dar de baja|retirar(?:me)? el servicio|terminar el c
                 r"(?:recoger|devolver|entregar) (?:el|los) (?:m[óo]dem|equipos?|decodificador)|"
                 r"no (?:creo que )?(?:necesito|necesite|voy a necesitar) (?:m[áa]s )?el servicio|"
                 r"no (?:me )?vuelvan a cobrar|ya no quiero saber nada)")
-INSISTE_RE = r"(igual (?:quiero|voy a) cancelar|no me interesa|proceda con la cancelaci|ya tom[ée] la decisi|quiero la baja ya|no,? gracias,? solo quiero cancelar)"
+# Incluye cómo lo cuenta el asesor en tercera persona ("el cliente insiste en cancelar", "ya tomó la decisión").
+INSISTE_RE = (r"(igual (?:quiero|voy a|quiere|va a) cancelar|no me interesa|proceda con la cancelaci|"
+              r"ya tom[éeóo] la decisi|quiero la baja ya|no,? gracias,? solo quiero cancelar|"
+              r"insiste en (?:cancelar|la baja|irse|retirarse)|no quiere (?:ninguna|m[áa]s) ofertas?)")
 
 # Oferta sugerida por motivo, alineada con el plan de accionables (docs/07). Es una propuesta: el catálogo
 # y la política de retención reales los define Claro.
@@ -298,3 +304,79 @@ def turnos_de_llamada(texto_anonimizado: str) -> list[dict]:
         if m and m.group(2).strip():
             out.append({"rol": "cliente" if m.group(1) == "CLIENT" else "asesor", "texto": m.group(2).strip()})
     return out
+
+
+# --------------------------------------------------------------------------------------------- copiloto (chat)
+CHAT_PROMPT = f"""Eres el copiloto de un asesor de retención de Claro Colombia (clientes del hogar, Cluster 3).
+El asesor te escribe en lenguaje natural lo que dice o le pasa al cliente y te pide ayuda. Conversa con él como un
+colega experto: breve (máximo 6 frases o viñetas cortas), directo, en español de Colombia, tuteando al asesor.
+
+Con cada mensaje recibes el ANÁLISIS del caso (intención de cancelar, motivo, urgencia, sentimiento, oferta sugerida,
+pregunta sugerida, alertas y contexto del Cluster 3). Úsalo así:
+1. Di en una frase qué está pasando con el cliente (motivo e intención), si ya está claro.
+2. Si falta información para saber el motivo, pregúntale al asesor o sugiérele qué preguntarle al cliente.
+3. Recomienda qué ofrecer: la oferta sugerida o una variante coherente con ella.
+4. Si ayuda, dale una frase para decirle al cliente, entre comillas, tratando al cliente de usted.
+5. Menciona solo las alertas que importen ahora.
+
+Reglas: no inventes datos del cliente, precios, descuentos ni beneficios que no estén en el análisis; toda cifra que
+menciones debe venir del análisis; si el asesor pregunta algo que no está en el análisis, dilo. Versión {PROMPT_VERSION}."""
+
+SALUDO_CHAT = ("Hola, soy tu copiloto de retención. Cuéntame qué te dice el cliente, con tus palabras: por ejemplo "
+               "\"el cliente quiere otro plan porque no usa los datos\" o \"llama porque el internet se le cae\". "
+               "Te digo qué está pasando, qué preguntarle y qué ofrecerle.")
+
+
+def _respuesta_reglas(r: dict) -> str:
+    """Respuesta sin LLM (o cuando el cliente ya decidió irse): armada con el análisis."""
+    partes = []
+    if r["motivo"] != "otro":
+        partes.append(f"Parece un caso de **{r['motivo']}** ({r['submotivo']}), con intención de cancelar de "
+                      f"{r['intencion_cancelar_prob'] * 100:.0f} % y urgencia {r['urgencia']}.")
+    if r.get("pregunta_sugerida"):
+        partes.append(f"Para confirmar el motivo, pregúntale: \"{r['pregunta_sugerida']}\"")
+    partes.append(f"Qué ofrecer: {r['oferta_sugerida']}")
+    partes += [f"⚠️ {a}" for a in r["alertas"]]
+    return "\n\n".join(partes)
+
+
+def copiloto_chat(mensajes: list[dict], usar_llm: bool | None = None, usar_jev: bool | None = None,
+                  modelo: str | None = None, on_token=None) -> dict:
+    """mensajes: [{"rol": "asesor" | "copiloto", "texto": ...}] con el último mensaje del asesor al final.
+
+    Lo que el asesor ha contado del cliente se analiza con Jev (o reglas); el LLM conversa con ese análisis como
+    contexto y responde en streaming (on_token recibe el texto parcial). Si el cliente insiste en cancelar, la
+    respuesta es fija y no la escribe el LLM.
+    """
+    caso = "\n".join(f"CLIENT: {m['texto']}" for m in mensajes if m["rol"] == "asesor")
+    if len(re.sub(r"\s+", " ", caso.replace("CLIENT:", "")).strip()) < MIN_CARACTERES:
+        return {"respuesta": SALUDO_CHAT, "analisis": None, "fuente": "plantilla"}
+    r = analizar_llamada(caso, usar_llm=False, usar_jev=usar_jev)
+    usar_llm = llm_factory.llm_available() if usar_llm is None else usar_llm
+    if any("insiste en cancelar" in a for a in r["alertas"]):
+        r["oferta_sugerida"] = "Gestionar la cancelación sin más ofertas."
+        texto = ("El cliente ya tomó la decisión: gestiona la baja sin más ofertas, es su derecho. Puedes decirle: "
+                 "\"Entiendo su decisión y la respeto. Ya mismo le gestiono la cancelación y le confirmo los pasos.\"")
+        return {"respuesta": texto, "analisis": r, "fuente": "reglas (el cliente insiste en cancelar)"}
+    if not usar_llm:
+        return {"respuesta": _respuesta_reglas(r), "analisis": r, "fuente": "reglas"}
+    campos = ["intencion_cancelar_prob", "motivo", "submotivo", "motivo_confianza", "urgencia", "sentimiento_global",
+              "oferta_sugerida", "accionable_relacionado", "pregunta_sugerida", "alertas", "contexto_c3"]
+    analisis = json.dumps({k: r.get(k) for k in campos}, ensure_ascii=False, default=float)
+    msgs = [("system", CHAT_PROMPT)]
+    for m in mensajes[:-1][-10:]:
+        msgs.append(("human" if m["rol"] == "asesor" else "ai", m["texto"]))
+    msgs.append(("human", f"ANÁLISIS DEL CASO: {analisis}\n\nMensaje del asesor: {mensajes[-1]['texto']}"))
+    nombre = modelo or llm_factory.model_name()
+    try:
+        texto = ""
+        for chunk in llm_factory.get_chat_model(modelo=nombre, max_tokens=600).stream(msgs):
+            c = chunk.content if isinstance(chunk.content, str) else "".join(
+                b.get("text", "") for b in chunk.content if isinstance(b, dict))
+            texto += c
+            if on_token and c:
+                on_token(texto)
+        return {"respuesta": texto.strip(), "analisis": r, "fuente": f"llm ({nombre})"}
+    except Exception as e:  # sin LLM disponible, la respuesta sale del análisis
+        r["errores"].append(f"chat: {str(e)[:120]}")
+        return {"respuesta": _respuesta_reglas(r), "analisis": r, "fuente": "reglas (LLM no disponible)"}

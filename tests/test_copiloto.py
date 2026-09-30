@@ -68,3 +68,17 @@ def test_si_insiste_no_se_intenta_retener():
 def test_intencion_implicita_sin_api(frase, esperado):
     r = analizar_llamada(f"Cliente: {frase}", usar_llm=False, usar_jev=False)
     assert (r["intencion_cancelar_prob"] >= 0.5) == esperado
+
+
+def test_copiloto_chat_sin_llm():
+    from cluster3.nlp.analizador import SALUDO_CHAT, copiloto_chat
+
+    m = [{"rol": "asesor", "texto": "hola"}]
+    assert copiloto_chat(m, usar_llm=False, usar_jev=False)["respuesta"] == SALUDO_CHAT
+    m = [{"rol": "asesor", "texto": "El cliente dice que paga por televisión que no ve y quiere dejar solo internet"}]
+    out = copiloto_chat(m, usar_llm=False, usar_jev=False)
+    assert out["analisis"] and "Qué ofrecer" in out["respuesta"]
+    m += [{"rol": "copiloto", "texto": out["respuesta"]},
+          {"rol": "asesor", "texto": "Ya le ofrecí dejarle solo internet pero insiste en cancelar"}]
+    out = copiloto_chat(m, usar_llm=True, usar_jev=False)  # aun con LLM, si insiste la respuesta es fija
+    assert out["fuente"].startswith("reglas") and "respeto" in out["respuesta"]

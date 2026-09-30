@@ -94,7 +94,7 @@ Hecho: pipeline completo, modelos, NLP híbrido validado contra 50 etiquetas hum
 multiagente (conversación, streaming, selector de modelo) con evals (offline 100 %; con LLM: ruta 100 %,
 cifras respaldadas 92 %, juez 4,46/5 en fidelidad; 13 preguntas), app Streamlit guiada, repo público, deck en Artifact Slides.
 
-Fase 1 del copiloto hecha: pestaña Copiloto (analizar llamada + copiloto en vivo) y herramienta
+Fase 1 del copiloto hecha: pestaña Copiloto (analizar llamada + copiloto en chat, `copiloto_chat`) y herramienta
 `analizar_transcripcion` en el chat. Fase 2 (agente de retención) documentada en `docs/08`.
 
 Pendiente, en este orden:

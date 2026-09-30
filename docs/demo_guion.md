@@ -56,21 +56,19 @@ Cliente: Quiero saber qué necesito para llevarme mi número fijo, y cuánto me 
 Cliente: La verdad ya les di muchas oportunidades.
 ```
 
-## 2 · Copiloto en vivo
+## 2 · Copiloto (chat)
 
-Modo **Copiloto en vivo**. Registrar cada turno con **Quién habla** + **Texto del turno** → **Agregar turno**.
-El panel de la derecha se actualiza cuando habla el cliente (≈2–3 s).
+Modo **Copiloto (chat)**. Escribirle al copiloto como a un colega (probado con Sonnet 5):
 
-| # | Quién habla | Texto | Qué muestra el copiloto |
-|---|---|---|---|
-| 1 | Asesor | Buenas tardes, área de cancelaciones, ¿en qué le puedo ayudar? | (espera a que hable el cliente) |
-| 2 | Cliente | Hola, quiero cancelar el servicio, ya no quiero seguir con ustedes. | Intención ≈99 %, motivo **no claro** → **🔎 Pregúntale al cliente:** "¿Me cuenta qué lo lleva a querer cancelar el servicio?" |
-| 3 | Asesor | Lamento escucharlo. ¿Me cuenta qué lo lleva a querer cancelar? | — |
-| 4 | Cliente | Es que pago mucho por un paquete de televisión que casi no veo, en la casa solo usamos internet. | Motivo **servicios_no_usados** · oferta: retirar la TV y los decos que no usa (A3) · guion para proponerlo |
-| 5 | Asesor | Entiendo. Podemos revisar su plan y dejarle solo lo que usa. | — |
-| 6 | Cliente | No, gracias, igual quiero cancelar. Ya tomé la decisión. | ⚠️ **El cliente insiste: respetar su decisión** · guion fijo: "Entiendo su decisión y la respeto. Ya mismo le gestiono la cancelación…" |
+| # | El asesor escribe | Qué responde el copiloto |
+|---|---|---|
+| 1 | Oye, tengo un cliente que dice que quiere otro plan porque no usa los datos, que le sobran muchos megas | Intención de cancelar baja (≈34 %): quiere ajustar el plan, no irse. Motivo servicios no usados; sugiere preguntar qué otros servicios tiene activos y ajustar el plan en lugar de descontar |
+| 2 | Me dice que sí, que en la casa solo usan internet para trabajar y que la tele casi no la ven. ¿Qué le ofrezco? | Motivo confirmado; ofrecer retirar la TV y los decos y dejar solo internet (A3), con una frase lista para el cliente |
+| 3 | Ya le ofrecí dejarle solo internet pero insiste en cancelar | Respuesta fija e inmediata: gestionar la baja sin más ofertas, "Entiendo su decisión y la respeto…" |
 
-Mensaje para el comité: el copiloto identifica el motivo haciendo la pregunta correcta, propone la oferta que
-corresponde y **nunca presiona** cuando el cliente ya decidió.
+Otros arranques: "Tengo un cliente que llama porque el internet se le cae todas las noches" · "La cliente dice que la
+factura le subió y no sabe por qué". Cada respuesta trae chips (intención, motivo, urgencia, accionable) y la ficha
+completa del caso.
 
-Alternativa sin escribir: **Simular con una llamada real** → elegir una llamada → **Siguiente turno** varias veces.
+Mensaje para el comité: el asesor conversa como con un colega; el copiloto entiende la intención aunque nadie diga
+"cancelar", propone lo que corresponde y **nunca presiona** cuando el cliente ya decidió.
