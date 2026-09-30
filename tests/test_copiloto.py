@@ -48,3 +48,12 @@ def test_transcripcion_va_a_voz_del_cliente():
     assert es_transcripcion(LLAMADA)
     assert route_rules(LLAMADA)[0] == ["voz_cliente"]
     assert not es_transcripcion("¿Cuál es la tasa de churn?")
+
+
+def test_si_insiste_no_se_intenta_retener():
+    r = copiloto([{"rol": "cliente", "texto": "Pago mucho por televisión que no veo."},
+                  {"rol": "asesor", "texto": "Podemos dejarle solo internet."},
+                  {"rol": "cliente", "texto": "No, gracias, igual quiero cancelar. Ya tomé la decisión."}],
+                 usar_llm=True, usar_jev=False)  # aun con LLM disponible, el guion es la plantilla fija
+    assert r["fuentes"]["guion"].startswith("reglas")
+    assert "respeto" in r["guion"].lower() and "cancelación" in r["guion"].lower()

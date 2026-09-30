@@ -264,7 +264,12 @@ def copiloto(turnos: list[dict], usar_llm: bool | None = None, usar_jev: bool | 
     r = analizar_llamada(texto, usar_llm=False, usar_jev=usar_jev)
     usar_llm = llm_factory.llm_available() if usar_llm is None else usar_llm
     r["guion"], r["fuentes"]["guion"] = _guion_reglas(r), "reglas"
-    if usar_llm:
+    insiste = any("insiste en cancelar" in a for a in r["alertas"])
+    if insiste:
+        # Guardarraíl: si el cliente insiste, no se intenta retener; el guion confirma la baja (plantilla fija).
+        r["oferta_sugerida"] = "Gestionar la cancelación sin más ofertas. Si el cliente lo pide, recordarle las opciones."
+        r["fuentes"]["guion"] = "reglas (el cliente insiste en cancelar)"
+    if usar_llm and not insiste:
         try:
             resumen = {k: r[k] for k in ["motivo", "submotivo", "urgencia", "intencion_cancelar_prob", "oferta_sugerida",
                                          "pregunta_sugerida", "alertas"]}
