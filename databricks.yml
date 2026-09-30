@@ -74,6 +74,7 @@ resources:
             permission: READ_VOLUME
 
 targets:
+  # Sin `mode: development`: ese modo antepone el usuario al esquema (dev_<usuario>_cluster3) y las rutas del
+  # job, la app y los permisos esperan workspace.cluster3. El job no tiene programación: corre solo a demanda.
   dev:
-    mode: development
     default: true
