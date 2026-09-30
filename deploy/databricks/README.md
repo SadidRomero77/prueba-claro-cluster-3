@@ -40,6 +40,8 @@ databricks fs cp data/raw/Clientes_Cluster_3.xlsx dbfs:/Volumes/workspace/cluste
 databricks fs cp data/raw/Llamadas.xlsx dbfs:/Volumes/workspace/cluster3/raw/
 databricks fs cp data/raw/Diccionario_Datos_Cluster3.xlsx dbfs:/Volumes/workspace/cluster3/raw/
 # Clasificación híbrida y benchmark ya calculados (evitan reclasificar 500 llamadas con el LLM)
+databricks fs mkdir dbfs:/Volumes/workspace/cluster3/raw/insumos/data/processed
+databricks fs mkdir dbfs:/Volumes/workspace/cluster3/raw/insumos/outputs/tables
 databricks fs cp data/processed/llamadas_hibrido.parquet dbfs:/Volumes/workspace/cluster3/raw/insumos/data/processed/
 databricks fs cp outputs/tables/nlp_benchmark.csv dbfs:/Volumes/workspace/cluster3/raw/insumos/outputs/tables/
 databricks fs cp outputs/tables/agent_evals.csv dbfs:/Volumes/workspace/cluster3/raw/insumos/outputs/tables/

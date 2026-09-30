@@ -145,6 +145,7 @@ for t, desc in [("segmentos_cluster3", "churn e intención por segmento"), ("acc
 import pickle
 
 import mlflow
+import skops.io as sio
 from mlflow import MlflowClient
 
 mlflow.set_registry_uri("databricks-uc")
@@ -156,10 +157,13 @@ for key in ["intencion", "churn"]:
     with open(config.MODELS_DIR / f"modelo_{key}.pkl", "rb") as f:
         b = pickle.load(f)
     nombre = f"{CAT}.{SCH}.modelo_{key}"
+    # MLflow guarda en formato skops (seguro) y exige declarar los tipos del modelo. El modelo lo entrenó este
+    # mismo job, así que sus tipos (LightGBM, calibrador de scikit-learn) son de confianza.
+    confiables = sio.get_untrusted_types(data=sio.dumps(b["model"]))
     with mlflow.start_run(run_name=f"registro_{key}"):
         mlflow.log_metrics({k: float(metricas[key][k]) for k in ["auc_cv_media", "pr_auc", "lift_10"]})
         info = mlflow.sklearn.log_model(b["model"], name=f"modelo_{key}", input_example=scores[b["features"]].head(5),
-                                        registered_model_name=nombre)
+                                        registered_model_name=nombre, skops_trusted_types=confiables)
     version = info.registered_model_version
     cliente_mlflow.set_registered_model_alias(nombre, "champion", version)
     print(f"{nombre} v{version} → champion")
