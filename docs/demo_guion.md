@@ -33,6 +33,29 @@ Qué debería mostrar (probado con Jev + LLM, unos 10 s):
 
 La misma llamada se puede pegar en el chat (pestaña **💬 Agente**) con "Analiza esta llamada:" al inicio.
 
+### 1b · Intención sin decir "cancelar"
+
+Prueba de que el sistema entiende el sentido y no solo palabras clave. Ninguna de estas llamadas contiene la palabra
+"cancelar"; las dos últimas son controles donde el cliente **no** quiere irse (resultados con Jev + LLM):
+
+| Llamada (resumen) | Intención | Motivo |
+|---|---|---|
+| Otra empresa le ofrece la mitad; pregunta cómo llevarse su número y cuánto paga si termina antes | 95 % | competencia |
+| Se muda a otra ciudad: "no creo que necesite más el servicio", ¿dónde entrego los equipos? | 97 % | traslado |
+| "Ya no quiero saber nada más de ustedes… que vengan a recoger el módem" | 98 % | falla técnica |
+| Control: solo pide una visita técnica por internet lento | 3 % | falla técnica |
+| Control: quiere un plan más barato "pero quedarme con ustedes" | 30 % | precio |
+
+Texto para pegar (caso de competencia):
+
+```
+Asesor: Buenas tardes, ¿en qué le puedo ayudar?
+Cliente: Hola, mire, me llegó una propuesta de otra empresa: internet de 500 megas y televisión por casi la mitad de lo que pago con ustedes.
+Asesor: Entiendo, ¿qué necesita?
+Cliente: Quiero saber qué necesito para llevarme mi número fijo, y cuánto me toca pagar si termino el contrato antes de tiempo.
+Cliente: La verdad ya les di muchas oportunidades.
+```
+
 ## 2 · Copiloto en vivo
 
 Modo **Copiloto en vivo**. Registrar cada turno con **Quién habla** + **Texto del turno** → **Agregar turno**.

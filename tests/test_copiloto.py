@@ -57,3 +57,14 @@ def test_si_insiste_no_se_intenta_retener():
                  usar_llm=True, usar_jev=False)  # aun con LLM disponible, el guion es la plantilla fija
     assert r["fuentes"]["guion"].startswith("reglas")
     assert "respeto" in r["guion"].lower() and "cancelación" in r["guion"].lower()
+
+
+@pytest.mark.parametrize("frase,esperado", [
+    ("Quiero saber qué necesito para llevarme mi número y cuánto pago si termino el contrato antes.", True),
+    ("Me voy a otra ciudad, no creo que necesite más el servicio. ¿Dónde entrego los equipos?", True),
+    ("Ya no quiero saber nada más de ustedes, que vengan a recoger el módem.", True),
+    ("Desde ayer el internet está lento en las noches, ¿me agendan una visita técnica?", False),
+])
+def test_intencion_implicita_sin_api(frase, esperado):
+    r = analizar_llamada(f"Cliente: {frase}", usar_llm=False, usar_jev=False)
+    assert (r["intencion_cancelar_prob"] >= 0.5) == esperado

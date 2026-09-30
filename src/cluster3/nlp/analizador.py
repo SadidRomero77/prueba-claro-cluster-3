@@ -27,7 +27,12 @@ from cluster3.nlp.preprocess import preprocess_calls
 PROMPT_VERSION = "copiloto-v1.1"
 MIN_CARACTERES = 40
 ROL_RE = re.compile(r"^\s*(cliente|client|usuario|asesor|agente|agent)\s*:\s*", re.I | re.M)
-INTENCION_RE = r"(cancelar|dar de baja|retirar(?:me)? el servicio|terminar el contrato|dar por terminado|no quiero (?:seguir|continuar))"
+# Respaldo sin API. Incluye formas implícitas: Jev las detecta por el sentido, las reglas necesitan la frase.
+INTENCION_RE = (r"(cancelar|dar de baja|retirar(?:me)? el servicio|terminar el contrato|termino el contrato|"
+                r"dar por terminado|no quiero (?:seguir|continuar)|llevarme (?:mi|el) n[úu]mero|portabilidad|"
+                r"(?:recoger|devolver|entregar) (?:el|los) (?:m[óo]dem|equipos?|decodificador)|"
+                r"no (?:creo que )?(?:necesito|necesite|voy a necesitar) (?:m[áa]s )?el servicio|"
+                r"no (?:me )?vuelvan a cobrar|ya no quiero saber nada)")
 INSISTE_RE = r"(igual (?:quiero|voy a) cancelar|no me interesa|proceda con la cancelaci|ya tom[ée] la decisi|quiero la baja ya|no,? gracias,? solo quiero cancelar)"
 
 # Oferta sugerida por motivo, alineada con el plan de accionables (docs/07). Es una propuesta: el catálogo
