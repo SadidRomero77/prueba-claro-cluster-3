@@ -98,7 +98,8 @@ Fase 1 del copiloto hecha: pestaña Copiloto (analizar llamada + copiloto en cha
 `analizar_transcripcion` en el chat. Fase 2 (agente de retención) documentada en `docs/08`.
 
 Pendiente, en este orden:
-1. Desplegar en Databricks Free Edition (`deploy/databricks/README.md`) y en AWS (`deploy/aws/README.md`).
+1. Desplegar en AWS (`deploy/aws/README.md`). Databricks Free Edition ya está desplegado: tablas medallion en
+   `workspace.cluster3`, modelos en UC con alias `champion` y app `cluster3-churn` funcionando.
 2. Preparar la presentación para la sustentación (la app es la demo en vivo).
 3. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
 
