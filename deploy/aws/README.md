@@ -56,7 +56,7 @@ aws s3 rm s3://<bucket-temporal>/artefactos.tgz
 ## 4. Variables y arranque
 
 ```bash
-cp .env.example .env   # ANTHROPIC_API_KEY o OPENAI_API_KEY, LLM_PROVIDER
+cp .env.example .env   # OPENROUTER_API_KEY, TYPESAFE_API_KEY, LLM_PROVIDER=openrouter
 cat >> .env <<EOF
 APP_DOMAIN=cluster3.<tu-dominio>
 APP_USER=claro
@@ -65,6 +65,9 @@ EOF
 cd deploy/aws && docker compose --env-file ../../.env up -d --build
 docker compose logs -f app
 ```
+
+Si se editan las claves en `.env` con la app arriba, recrear el contenedor para que las tome:
+`docker compose --env-file ../../.env up -d --force-recreate app`.
 
 El hash bcrypt lleva `$`: déjalo entre comillas simples para que Docker Compose no lo interprete.
 
