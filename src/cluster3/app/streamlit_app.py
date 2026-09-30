@@ -42,86 +42,101 @@ from cluster3 import llm as llm_factory  # noqa: E402
 from cluster3.agents import prompts as P  # noqa: E402
 from cluster3.eda.profile import BLUE, GRID, INK, INK2, ORANGE  # noqa: E402
 
-st.set_page_config(page_title="Cluster 3 · Churn Claro", page_icon="📉", layout="wide")
+st.set_page_config(page_title="Cluster 3 · Churn Claro", page_icon=":material/insights:", layout="wide")
 
 # --------------------------------------------------------------------------- estilo
 # Tokens de la paleta del proyecto (docs/CLAUDE.md). El texto usa tinta neutra; el color identifica series.
 CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block');
 :root {{
-  --ink: {INK}; --ink2: {INK2}; --muted: #8a8983; --grid: {GRID};
-  --surface: #ffffff; --bg: #f7f6f3; --blue: {BLUE}; --blue-soft: #e9f1fb;
-  --orange: {ORANGE}; --orange-soft: #fdeee7; --good: #1f7a4d; --good-soft: #e6f4ec;
-  --warn: #9a6200; --warn-soft: #fcf1dc;
+  --ink: #1b2430; --ink2: #4a5563; --muted: #6b7685; --grid: #e3e8ef; --surface: #ffffff; --bg: #f4f6f9;
+  --brand: #1f5fbf; --brand-dark: #174a96; --brand-soft: #eaf1fb; --blue: {BLUE};
+  --orange: {ORANGE}; --orange-dark: #a84113; --orange-soft: #fdf0ea; --good: #1f7a4d; --good-soft: #e7f4ec;
+  --warn: #8a5a00; --warn-soft: #fbf2df;
 }}
-html, body, [class*="css"], .stMarkdown, .stText, button, input, textarea {{ font-family: 'Inter', sans-serif; }}
-.block-container {{ padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1320px; }}
-h1, h2, h3 {{ letter-spacing: -0.01em; }}
+.stApp, .stApp p, .stApp li, .stApp label, .stApp input, .stApp textarea, .stApp button, .stApp td, .stApp th,
+.stApp h1, .stApp h2, .stApp h3, .stApp h4,
+.stApp span:not([data-testid="stIconMaterial"]):not(.msr) {{ font-family: 'IBM Plex Sans', sans-serif; }}
+.stApp {{ background: var(--bg); color: var(--ink); }}
+.block-container {{ padding-top: 3rem; padding-bottom: 3rem; max-width: 1320px; }}
+h1, h2, h3 {{ letter-spacing: -0.01em; color: var(--ink); }}
+.msr {{ font-family: 'Material Symbols Rounded'; font-weight: normal; font-style: normal; line-height: 1;
+  letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased;
+  font-size: 22px; vertical-align: middle; }}
 
-.hero {{ background: linear-gradient(120deg, #0b0b0b 0%, #1b2a3f 55%, #2a78d6 140%); color: #fff;
-  border-radius: 18px; padding: 26px 30px 22px; margin-bottom: 18px; }}
-.hero .eyebrow {{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }}
-.hero h1 {{ color: #fff; font-size: 30px; font-weight: 700; margin: 6px 0 6px; line-height: 1.15; }}
-.hero p {{ color: #d9dee6; font-size: 15px; margin: 0 0 14px; max-width: 900px; }}
-.chip {{ display: inline-block; font-size: 12.5px; font-weight: 500; padding: 5px 11px; border-radius: 999px;
-  margin: 0 6px 6px 0; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); color: #fff; }}
+.hero {{ background: var(--surface); border: 1px solid var(--grid); border-left: 6px solid var(--brand);
+  border-radius: 12px; padding: 22px 28px 18px; margin-bottom: 18px; }}
+.hero .eyebrow {{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); font-weight: 600; }}
+.hero h1 {{ color: var(--ink); font-size: 28px; font-weight: 600; margin: 6px 0 6px; line-height: 1.2; }}
+.hero p {{ color: var(--ink2); font-size: 15px; margin: 0 0 12px; max-width: 900px; }}
+.chip {{ display: inline-block; font-size: 12.5px; font-weight: 500; padding: 4px 10px; border-radius: 6px;
+  margin: 0 6px 6px 0; background: var(--brand-soft); color: var(--brand-dark); border: 1px solid #d3e2f5; }}
 
-.kpi {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 15px 16px 13px;
-  height: 100%; min-height: 124px; position: relative; overflow: hidden; }}
-.kpi::before {{ content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grid); }}
-.kpi.blue::before {{ background: var(--blue); }} .kpi.orange::before {{ background: var(--orange); }}
-.kpi .lbl {{ font-size: 12.5px; color: var(--ink2); font-weight: 500; }}
-.kpi .val {{ font-size: 26px; font-weight: 700; color: var(--ink); margin-top: 4px; line-height: 1.1; }}
+.kpi {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 14px 16px 12px;
+  height: 100%; min-height: 118px; position: relative; overflow: hidden; }}
+.kpi::before {{ content: ""; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--grid); }}
+.kpi.blue::before {{ background: var(--brand); }} .kpi.orange::before {{ background: var(--orange); }}
+.kpi .lbl {{ font-size: 12.5px; color: var(--muted); font-weight: 500; text-transform: none; }}
+.kpi .val {{ font-size: 25px; font-weight: 600; color: var(--ink); margin-top: 6px; line-height: 1.1; }}
 .kpi .sub {{ font-size: 12px; color: var(--muted); margin-top: 4px; }}
 
-.sec {{ margin: 22px 0 10px; }}
-.sec .t {{ font-size: 19px; font-weight: 650; color: var(--ink); }}
-.sec .s {{ font-size: 13.5px; color: var(--ink2); margin-top: 2px; }}
+.sec {{ margin: 24px 0 10px; }}
+.sec .t {{ font-size: 18px; font-weight: 600; color: var(--ink); }}
+.sec .s {{ font-size: 13.5px; color: var(--muted); margin-top: 2px; }}
 
-.card {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 16px 18px;
-  height: 100%; }}
-.card .ic {{ font-size: 20px; }} .card .ct {{ font-weight: 650; font-size: 14.5px; margin: 6px 0 4px; color: var(--ink); }}
-.card .cx {{ font-size: 13.5px; color: var(--ink2); line-height: 1.45; }}
+.card {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 16px 18px; height: 100%; }}
+.card .ic {{ color: var(--brand); }} .card .ic .msr {{ font-size: 22px; }}
+.card .ct {{ font-weight: 600; font-size: 14.5px; margin: 6px 0 4px; color: var(--ink); }}
+.card .cx {{ font-size: 13.5px; color: var(--ink2); line-height: 1.5; }}
 
-.agent {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px; padding: 14px 15px;
-  height: 100%; min-height: 210px; }}
-.agent .an {{ font-weight: 650; font-size: 14px; color: var(--ink); margin: 4px 0 3px; }}
-.agent .ad {{ font-size: 12.5px; color: var(--ink2); line-height: 1.4; }}
+.agent {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 14px 15px;
+  height: 100%; min-height: 200px; }}
+.agent .ic {{ color: var(--brand); }}
+.agent .an {{ font-weight: 600; font-size: 14px; color: var(--ink); margin: 6px 0 3px; }}
+.agent .ad {{ font-size: 12.5px; color: var(--ink2); line-height: 1.45; }}
 .agent .at {{ font-size: 11.5px; color: var(--muted); margin-top: 8px; }}
 
-.pill {{ display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+.pill {{ display: inline-block; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 6px;
   margin: 0 5px 4px 0; border: 1px solid transparent; }}
-.pill.blue {{ background: var(--blue-soft); color: #1d5aa3; }}
-.pill.orange {{ background: var(--orange-soft); color: #a84113; }}
-.pill.good {{ background: var(--good-soft); color: var(--good); }}
-.pill.warn {{ background: var(--warn-soft); color: var(--warn); }}
-.pill.gray {{ background: #efeeea; color: var(--ink2); }}
+.pill.blue {{ background: var(--brand-soft); color: var(--brand-dark); border-color: #d3e2f5; }}
+.pill.orange {{ background: var(--orange-soft); color: var(--orange-dark); border-color: #f5d3c3; }}
+.pill.good {{ background: var(--good-soft); color: var(--good); border-color: #c9e6d4; }}
+.pill.warn {{ background: var(--warn-soft); color: var(--warn); border-color: #efdcb0; }}
+.pill.gray {{ background: #eef1f5; color: var(--ink2); border-color: var(--grid); }}
 
-.stTabs [data-baseweb="tab-list"] {{ gap: 4px; border-bottom: 1px solid var(--grid); }}
-.stTabs [data-baseweb="tab"] {{ padding: 8px 14px; border-radius: 10px 10px 0 0; font-weight: 500; }}
-.stTabs [aria-selected="true"] {{ background: var(--surface); }}
-[data-testid="stSidebar"] {{ background: #fbfaf8; border-right: 1px solid var(--grid); }}
-[data-testid="stChatMessage"] {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 14px;
+.stTabs [data-baseweb="tab-list"] {{ gap: 2px; border-bottom: 1px solid var(--grid); }}
+.stTabs [data-baseweb="tab"] {{ padding: 8px 14px; font-weight: 500; color: var(--ink2); }}
+.stTabs [aria-selected="true"] {{ color: var(--brand); }}
+.stTabs [data-baseweb="tab-highlight"] {{ background-color: var(--brand); }}
+[data-testid="stSidebar"] {{ background: var(--surface); border-right: 1px solid var(--grid); }}
+[data-testid="stChatMessage"] {{ background: var(--surface); border: 1px solid var(--grid); border-radius: 10px;
   padding: 10px 14px; margin-bottom: 8px; }}
-[data-testid="stMetricValue"] {{ font-weight: 700; }}
-.guide {{ background: var(--blue-soft); border: 1px solid #cfe0f6; border-left: 4px solid var(--blue);
-  border-radius: 12px; padding: 12px 16px; margin: 4px 0 14px; }}
-.guide .gt {{ font-weight: 650; font-size: 13.5px; color: #1d5aa3; margin-bottom: 3px; }}
-.guide .gx {{ font-size: 13.5px; color: var(--ink); line-height: 1.5; }}
+[data-testid="stMetricValue"] {{ font-weight: 600; }}
+div[data-testid="stExpander"] details {{ border-radius: 10px; border-color: var(--grid); background: var(--surface); }}
+.stButton button {{ border-radius: 8px; border-color: var(--grid); }}
+
+.guide {{ background: var(--surface); border: 1px solid var(--grid); border-left: 4px solid var(--brand);
+  border-radius: 10px; padding: 12px 16px; margin: 4px 0 14px; }}
+.guide .gt {{ font-weight: 600; font-size: 13.5px; color: var(--brand-dark); margin-bottom: 4px; }}
+.guide .gt .msr {{ font-size: 19px; margin-right: 4px; }}
+.guide .gx {{ font-size: 13.5px; color: var(--ink); line-height: 1.55; }}
 .guide .gl {{ font-size: 12.5px; color: var(--ink2); margin-top: 6px; }}
+.guide.alerta {{ border-left-color: var(--orange); }} .guide.alerta .gt {{ color: var(--orange-dark); }}
 .lectura {{ font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--grid);
-  border-radius: 12px; padding: 10px 14px; margin: 6px 0 10px; }}
-.quote {{ border-left: 3px solid var(--orange); background: var(--surface); padding: 8px 12px; margin: 6px 0;
-  border-radius: 0 10px 10px 0; font-size: 13.5px; color: var(--ink); font-style: italic; }}
+  border-left: 4px solid var(--orange); border-radius: 10px; padding: 10px 14px; margin: 6px 0 10px; }}
+.quote {{ border-left: 3px solid var(--brand); background: var(--surface); padding: 8px 12px; margin: 6px 0;
+  border-radius: 0 8px 8px 0; font-size: 13.5px; color: var(--ink); font-style: italic; }}
 .quote .qm {{ font-style: normal; font-size: 11.5px; color: var(--muted); margin-top: 4px; }}
-div[data-testid="stExpander"] details {{ border-radius: 12px; border-color: var(--grid); background: var(--surface); }}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
-AVATAR = {"conversacion": "👋", "perfilado": "📊", "voz_cliente": "🎧", "estrategia": "🎯", "critico": "✅",
-          "orquestador": "🧭"}
+# Íconos de línea (Material Symbols) en lugar de emojis: en HTML con ic(), en avatares con :material/…:
+ICONO = {"conversacion": "forum", "perfilado": "query_stats", "voz_cliente": "record_voice_over", "estrategia": "flag",
+         "critico": "fact_check", "orquestador": "hub"}
+AVATAR = {k: f":material/{v}:" for k, v in ICONO.items()}
 TONO_AGENTE = {"perfilado": "blue", "voz_cliente": "orange", "estrategia": "good", "conversacion": "gray"}
 
 
@@ -167,6 +182,11 @@ def _e(x) -> str:
     return html.escape(str(x))
 
 
+def ic(nombre: str) -> str:
+    """Ícono de línea (Material Symbols) para usar dentro de HTML."""
+    return f'<span class="msr">{nombre}</span>'
+
+
 def section(titulo: str, sub: str | None = None) -> None:
     s = f'<div class="s">{_e(sub)}</div>' if sub else ""
     st.markdown(f'<div class="sec"><div class="t">{_e(titulo)}</div>{s}</div>', unsafe_allow_html=True)
@@ -181,14 +201,14 @@ def kpis_row(items: list[tuple[str, str, str, str]]) -> None:
 
 
 def cards(items: list[tuple[str, str, str]], por_fila: int = 3) -> None:
-    """items: (ícono, título, texto con **negritas**)"""
+    """items: (nombre de ícono Material, título, texto con **negritas**)"""
     for i in range(0, len(items), por_fila):
         cols = st.columns(por_fila)
-        for col, (ic, t, x) in zip(cols, items[i:i + por_fila]):
+        for col, (icono, t, x) in zip(cols, items[i:i + por_fila]):
             x = _e(x)
             while "**" in x:  # **texto** → <b>texto</b>
                 x = x.replace("**", "<b>", 1).replace("**", "</b>", 1)
-            col.markdown(f'<div class="card"><div class="ic">{ic}</div><div class="ct">{_e(t)}</div>'
+            col.markdown(f'<div class="card"><div class="ic">{ic(icono)}</div><div class="ct">{_e(t)}</div>'
                          f'<div class="cx">{x}</div></div>', unsafe_allow_html=True)
         st.write("")
 
@@ -203,14 +223,14 @@ def _md(x: str) -> str:
 
 def guia(que: str, como: str | None = None) -> None:
     """Caja "Qué estás viendo" al inicio de cada pestaña: qué muestra y cómo leerlo."""
-    extra = f'<div class="gl">📖 <b>Cómo leerlo:</b> {_md(como)}</div>' if como else ""
-    st.markdown(f'<div class="guide"><div class="gt">💡 Qué estás viendo</div><div class="gx">{_md(que)}</div>{extra}'
+    extra = f'<div class="gl"><b>Cómo leerlo:</b> {_md(como)}</div>' if como else ""
+    st.markdown(f'<div class="guide"><div class="gt">{ic("info")}Qué estás viendo</div><div class="gx">{_md(que)}</div>{extra}'
                 "</div>", unsafe_allow_html=True)
 
 
 def lectura(texto: str) -> None:
     """Conclusión en una frase, calculada con los datos que se están mostrando."""
-    st.markdown(f'<div class="lectura">👉 {_md(texto)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="lectura">{_md(texto)}</div>', unsafe_allow_html=True)
 
 
 def barras_segmento(d: pd.DataFrame, col: str, color: str, base: float, titulo: str) -> alt.Chart:
@@ -229,7 +249,7 @@ def barras_segmento(d: pd.DataFrame, col: str, color: str, base: float, titulo: 
     regla = alt.Chart(pd.DataFrame({"v": [base]})).mark_rule(color=INK2, strokeDash=[4, 3]).encode(
         x="v:Q", tooltip=[alt.Tooltip("v:Q", title="Promedio del Cluster 3", format=".2f")])
     return (barras + regla).properties(height=max(180, 44 * len(d))).configure_view(stroke=None) \
-        .configure(background="transparent")
+        .configure(background="transparent", font="IBM Plex Sans")
 
 
 def curva_captura(lt: pd.DataFrame, decil: int, color: str, etiqueta: str) -> alt.Chart:
@@ -247,7 +267,7 @@ def curva_captura(lt: pd.DataFrame, decil: int, color: str, etiqueta: str) -> al
     punto = alt.Chart(d[d["elegido"]]).mark_point(size=260, color=color, filled=False, strokeWidth=3) \
         .encode(x=x, y=y, tooltip=tt)
     return (azar + modelo + punto).properties(height=300).configure_view(stroke=None) \
-        .configure(background="transparent")
+        .configure(background="transparent", font="IBM Plex Sans")
 
 
 def pill(texto: str, tono: str = "gray") -> str:
@@ -271,7 +291,7 @@ def barras_agrupadas(df: pd.DataFrame, cat: str, series: list[str], colores: lis
                  alt.Tooltip("valor:Q", title=titulo_x, format=".1f")],
     )
     return (base.mark_bar(cornerRadiusEnd=4, height={"band": 0.9})
-            .properties(height=alto).configure_view(stroke=None).configure(background="transparent"))
+            .properties(height=alto).configure_view(stroke=None).configure(background="transparent", font="IBM Plex Sans"))
 
 
 def barras_simples(df: pd.DataFrame, x: str, y: str, color: str, titulo_x: str, titulo_y: str,
@@ -282,7 +302,7 @@ def barras_simples(df: pd.DataFrame, x: str, y: str, color: str, titulo_x: str, 
                     y=alt.Y(f"{y}:Q", title=titulo_y, axis=alt.Axis(gridColor=GRID, labelColor=INK2,
                                                                     titleColor=INK2, domain=False, ticks=False)),
                     tooltip=[alt.Tooltip(f"{x}:O", title=titulo_x), alt.Tooltip(f"{y}:Q", title=titulo_y, format=fmt)])
-            .properties(height=alto).configure_view(stroke=None).configure(background="transparent"))
+            .properties(height=alto).configure_view(stroke=None).configure(background="transparent", font="IBM Plex Sans"))
 
 
 # --------------------------------------------------------------------------- datos
@@ -299,7 +319,7 @@ hay_jev = bool(config.TYPESAFE_API_KEY)
 
 # --------------------------------------------------------------------------- sidebar
 with st.sidebar:
-    st.markdown("### 📉 Cluster 3 · Churn")
+    st.markdown("### Cluster 3 · Churn")
     st.caption("Prueba técnica Claro Colombia · periodo 202508")
     st.markdown(pill("LLM conectado" if hay_llm else "LLM sin clave", "good" if hay_llm else "warn")
                 + pill("Jev conectado" if hay_jev else "Jev sin clave", "good" if hay_jev else "warn"),
@@ -341,8 +361,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tabs = st.tabs(["🏠 Resumen", "🧩 Segmentos", "🤖 Modelo ML", "🎧 Voz del cliente", "🎯 Accionables",
-                "💬 Agente", "📞 Copiloto", "🧪 Evaluación"])
+tabs = st.tabs([":material/dashboard: Resumen", ":material/groups: Segmentos", ":material/model_training: Modelo ML",
+                ":material/record_voice_over: Voz del cliente", ":material/task_alt: Accionables",
+                ":material/forum: Agente", ":material/support_agent: Copiloto", ":material/verified: Evaluación"])
 
 # --------------------------------------------------------------------------- 1. Resumen
 with tabs[0]:
@@ -373,44 +394,44 @@ with tabs[0]:
     fuga = _csv("comparacion_fuga.csv")
     mc3 = nlp.get("motivos_c3_pct", {})
     hallazgos = [
-        ("📞", "Muchos amenazan, pocos se van",
+        ("call", "Muchos amenazan, pocos se van",
          f"El **{_pct(kpis['intencion_tasa'])}** llamó a cancelar y solo el **{_pct(kpis['churn_tasa'], 2)}** se fue. "
          f"Quien llama tiene **{_d(veces, 1)}×** más riesgo de irse."),
-        ("💸", "El precio es el motivo número uno",
+        ("payments", "El precio es el motivo número uno",
          f"Precio y facturación explica el **{_pct(mc3.get('precio_facturacion', 0) / 100)}** de las llamadas del "
          f"Cluster 3; en el **{_pct(mc3.get('otro', 0) / 100)}** el cliente no deja claro el motivo."),
     ]
     if ch:
         top10 = ch.get("matriz_top10", {})
-        hallazgos.append(("🎯", "El modelo encuentra a los que se van",
+        hallazgos.append(("track_changes", "El modelo encuentra a los que se van",
                           f"El 10 % de mayor riesgo concentra **{_n(top10.get('VP', 0))} de {_n(ch['positivos'])}** bajas "
                           f"(lift **{_d(ch['lift_10'], 1)}×**), validado fuera de muestra."))
     if fuga is not None and len(fuga):
         auc_fuga = fuga.loc[fuga["variables"] == "con fuga", "auc"].max()
-        hallazgos.append(("🧯", "Se evitó la trampa de la fuga",
+        hallazgos.append(("shield", "Se evitó la trampa de la fuga",
                           f"Con variables que ya contienen el resultado, el modelo daba AUC **{_d(auc_fuga, 2)}**. "
                           "Se excluyeron: estado de la cuenta, planes de TV con sufijo I, reincidencias y campañas."))
     if nlp.get("urgencia_c3_pct"):
-        hallazgos.append(("🔁", "Llaman con urgencia y ya habían reclamado",
+        hallazgos.append(("replay", "Llaman con urgencia y ya habían reclamado",
                           f"El **{_pct(nlp['urgencia_c3_pct'].get('alta', 0) / 100)}** de las llamadas del Cluster 3 "
                           f"tiene urgencia alta y el **{_pct(nlp.get('reincidencia_c3_pct', 0) / 100)}** menciona un "
                           f"reclamo previo; se retiene al **{_pct(nlp.get('resultado_c3_pct', {}).get('retenido', 0) / 100)}**."))
     if a1 is not None and len(a1):
         top = a1.sort_values("impacto_anual_base_cop", ascending=False).iloc[0]
-        hallazgos.append(("🚀", "Primer paso recomendado",
+        hallazgos.append(("rocket_launch", "Primer paso recomendado",
                           f"**{top['id']} · {top['accionable']}**: {_cop(top['impacto_anual_base_cop'])} al año "
                           "en el escenario base."))
     cards(hallazgos)
 
     section("Cómo recorrer el panel", "Cada pestaña responde una pregunta de negocio")
     cards([
-        ("🧩", "Segmentos · ¿quiénes?", "Qué grupos de clientes tienen más intención y más churn."),
-        ("🤖", "Modelo ML · ¿a quién llamar?", "Cuántas bajas se capturan contactando a pocos clientes."),
-        ("🎧", "Voz del cliente · ¿por qué?", "Motivos, urgencia y frases reales de las llamadas."),
-        ("🎯", "Accionables · ¿qué hacer?", "Acciones priorizadas y su impacto en pesos por escenario."),
-        ("💬", "Agente · pregúntale", "Conversa con los datos; cada cifra viene de una herramienta."),
-        ("📞", "Copiloto · en la llamada", "Analiza una llamada o guía al asesor turno a turno: motivo, oferta y guion."),
-        ("🧪", "Evaluación · ¿es confiable?", "Cómo se validaron el NLP y el sistema de agentes."),
+        ("groups", "Segmentos · ¿quiénes?", "Qué grupos de clientes tienen más intención y más churn."),
+        ("model_training", "Modelo ML · ¿a quién llamar?", "Cuántas bajas se capturan contactando a pocos clientes."),
+        ("record_voice_over", "Voz del cliente · ¿por qué?", "Motivos, urgencia y frases reales de las llamadas."),
+        ("task_alt", "Accionables · ¿qué hacer?", "Acciones priorizadas y su impacto en pesos por escenario."),
+        ("forum", "Agente · pregúntale", "Conversa con los datos; cada cifra viene de una herramienta."),
+        ("support_agent", "Copiloto · en la llamada", "Analiza una llamada o conversa con el asesor: motivo, qué preguntar y qué ofrecer."),
+        ("verified", "Evaluación · ¿es confiable?", "Cómo se validaron el NLP y el sistema de agentes."),
     ])
 
 # --------------------------------------------------------------------------- 2. Segmentos
@@ -466,9 +487,9 @@ with tabs[2]:
                 continue
             with col:
                 st.markdown(f"**{titulo}**")
-                ic = m.get("auc_oof_ic95")
+                ic95 = m.get("auc_oof_ic95")
                 kpis_row([
-                    ("AUC", _d(m["auc_cv_media"]), f"IC 95 %: {_d(ic[0])}–{_d(ic[1])}" if ic else "", tono),
+                    ("AUC", _d(m["auc_cv_media"]), f"IC 95 %: {_d(ic95[0])}–{_d(ic95[1])}" if ic95 else "", tono),
                     ("PR-AUC", _d(m["pr_auc"]), f"azar: {_d(m['tasa_base'])}", tono),
                     ("Lift decil 1", f"{_d(m['lift_10'], 1)}×", f"{_n(m['positivos'])} casos reales", tono),
                 ])
@@ -653,7 +674,7 @@ with tabs[4]:
                 tooltip=[alt.Tooltip("id:N"), alt.Tooltip("accionable:N"), alt.Tooltip("tipo:N"),
                          alt.Tooltip("millones:Q", title="Millones COP", format=",.1f"),
                          alt.Tooltip("n_objetivo:Q", title="Clientes objetivo", format=",.0f")],
-            ).properties(height=48 * len(imp)).configure_view(stroke=None).configure(background="transparent")
+            ).properties(height=48 * len(imp)).configure_view(stroke=None).configure(background="transparent", font="IBM Plex Sans")
             st.altair_chart(graf, width="stretch")
             mejor = imp.sort_values(colv, ascending=False).iloc[0]
             lectura(f"En el escenario **{esc}**, la acción de mayor impacto es **{mejor['id']} · {mejor['accionable']}** "
@@ -701,9 +722,9 @@ with tabs[5]:
     for col, k in zip(cols, equipo):
         nombre, desc = P.AGENTES_INFO[k]
         tools_k = [f.__name__ for f in TOOLS_POR_AGENTE.get(k, [])]
-        extra = (f'<div class="at" title="{_e(", ".join(tools_k))}">🔧 {len(tools_k)} herramientas</div>'
+        extra = (f'<div class="at" title="{_e(", ".join(tools_k))}">{len(tools_k)} herramientas</div>'
                  if tools_k else "")
-        col.markdown(f'<div class="agent"><div style="font-size:22px">{AVATAR[k]}</div><div class="an">{_e(nombre)}</div>'
+        col.markdown(f'<div class="agent"><div class="ic">{ic(ICONO[k])}</div><div class="an">{_e(nombre)}</div>'
                      f'<div class="ad">{_e(desc)}</div>{extra}</div>', unsafe_allow_html=True)
 
     ss = st.session_state
@@ -728,22 +749,22 @@ with tabs[5]:
 
     def _avatar(r: dict) -> str:
         ag = r.get("agentes") or []
-        return AVATAR.get(ag[0], "🧭") if len(ag) == 1 else "🧭"
+        return AVATAR.get(ag[0], AVATAR["orquestador"]) if len(ag) == 1 else AVATAR["orquestador"]
 
     def _mostrar(r: dict, k: int = 0) -> None:
         ag = r.get("agentes") or []
         crit = r.get("critica") or {}
-        badges = "".join(pill(f"{AVATAR.get(a, '')} {P.AGENTES_INFO.get(a, (a,))[0]}", TONO_AGENTE.get(a, "gray"))
+        badges = "".join(pill(P.AGENTES_INFO.get(a, (a,))[0], TONO_AGENTE.get(a, "gray"))
                          for a in ag if a != "conversacion")
         if crit and ag != ["conversacion"]:
-            badges += pill("✓ Cifras verificadas" if crit.get("aprobado") else "⚠ Crítico con observaciones",
+            badges += pill("Cifras verificadas" if crit.get("aprobado") else "Crítico con observaciones",
                            "good" if crit.get("aprobado") else "warn")
         if r.get("desde_cache"):
-            badges += pill("⚡ Respuesta en caché", "gray")
+            badges += pill("En caché", "gray")
         elif r.get("latencia_ms"):
-            badges += pill(f"⏱ {_d(r['latencia_ms'] / 1000, 1)} s", "gray")
+            badges += pill(f"{_d(r['latencia_ms'] / 1000, 1)} s", "gray")
         if r.get("modelo"):
-            badges += pill(f"🧠 {llm_factory.MODELOS_OPENROUTER.get(r['modelo'], r['modelo']).split(' · ')[0]}", "gray")
+            badges += pill(f"{llm_factory.MODELOS_OPENROUTER.get(r['modelo'], r['modelo']).split(' · ')[0]}", "gray")
         if badges:
             st.markdown(badges, unsafe_allow_html=True)
         st.markdown(r.get("respuesta") or "")
@@ -761,20 +782,20 @@ with tabs[5]:
                     st.code(ev[:1500])
 
     if not ss.chat and not ss.pendiente:
-        with st.chat_message("assistant", avatar="👋"):
+        with st.chat_message("assistant", avatar=AVATAR["conversacion"]):
             st.markdown("¡Hola! Soy el asistente del Cluster 3. Pregúntame por los clientes, el modelo de ML, "
                         "lo que dicen las llamadas o qué acciones tomar. Puedes empezar con uno de los ejemplos.")
 
     for i, turno in enumerate(ss.chat):
         if turno["rol"] == "user":
-            with st.chat_message("user", avatar="🙂"):
+            with st.chat_message("user", avatar=":material/person:"):
                 st.markdown(turno["texto"])
         else:
             with st.chat_message("assistant", avatar=_avatar(turno["r"])):
                 _mostrar(turno["r"], i)
 
     if ss.pendiente:
-        with st.chat_message("assistant", avatar="🛑"):
+        with st.chat_message("assistant", avatar=":material/pan_tool:"):
             st.warning("Esta acción exporta datos de clientes y necesita aprobación humana.")
             st.json(ss.pendiente)
             a, b = st.columns(2)
@@ -796,21 +817,21 @@ with tabs[5]:
         historial = [{"rol": t["rol"], "texto": t["texto"] if t["rol"] == "user" else (t["r"].get("respuesta") or "")}
                      for t in ss.chat][-6:]
         ss.chat.append({"rol": "user", "texto": pregunta})
-        with st.chat_message("user", avatar="🙂"):
+        with st.chat_message("user", avatar=":material/person:"):
             st.markdown(pregunta)
-        with st.chat_message("assistant", avatar="🧭"):
+        with st.chat_message("assistant", avatar=":material/support_agent:"):
             estado = st.empty()
             vista = st.empty()
-            estado.markdown(pill("🧭 El orquestador está eligiendo quién responde…", "gray"), unsafe_allow_html=True)
+            estado.markdown(pill("El orquestador está eligiendo quién responde…", "gray"), unsafe_allow_html=True)
 
             def _evento(nodo: str, datos) -> None:
                 if nodo == "orquestador" and isinstance(datos, dict):
-                    nombres = [f"{AVATAR.get(a, '')} {P.AGENTES_INFO.get(a, (a,))[0]}" for a in datos.get("agentes") or []
+                    nombres = [P.AGENTES_INFO.get(a, (a,))[0] for a in datos.get("agentes") or []
                                if a != "conversacion"]
                     if nombres:
                         estado.markdown(pill("Trabajando: " + " · ".join(nombres), "blue"), unsafe_allow_html=True)
                 elif nodo in ("sintesis", "directo"):
-                    estado.markdown(pill("✅ El crítico está verificando las cifras…", "gray"), unsafe_allow_html=True)
+                    estado.markdown(pill("El crítico está verificando las cifras…", "gray"), unsafe_allow_html=True)
 
             # Vista previa en vivo; al terminar se reemplaza por la respuesta verificada por el crítico.
             r = ask(pregunta, thread_id=None, modo=modo, historial=historial,
@@ -859,11 +880,10 @@ with tabs[6]:
         ])
         st.write("")
         if r.get("pregunta_sugerida"):
-            st.markdown(f'<div class="guide" style="border-left-color:{ORANGE}; background:#fdeee7; border-color:#f3c9b6">'
-                        f'<div class="gt" style="color:#a84113">🔎 Pregúntale al cliente</div>'
+            st.markdown(f'<div class="guide alerta"><div class="gt">{ic("help")}Pregúntale al cliente</div>'
                         f'<div class="gx">{_e(r["pregunta_sugerida"])}</div></div>', unsafe_allow_html=True)
         for a in r.get("alertas") or []:
-            st.warning(a, icon="⚠️")
+            st.warning(a, icon=":material/warning:")
         c1, c2 = st.columns([3, 2])
         with c1:
             ctx = r.get("contexto_c3")
@@ -872,10 +892,10 @@ with tabs[6]:
                      f"<b>{_d(ctx['retenido_pct_c3'], 1)} %</b>.</div>") if ctx else ""
             acc_txt = f"<div class='cx' style='margin-top:6px'>Accionable: {_e(r['accionable_relacionado'])}</div>" \
                 if r.get("accionable_relacionado") else ""
-            st.markdown(f'<div class="card"><div class="ic">💡</div><div class="ct">Oferta sugerida</div>'
+            st.markdown(f'<div class="card"><div class="ic">{ic("lightbulb")}</div><div class="ct">Oferta sugerida</div>'
                         f'<div class="cx">{_e(r["oferta_sugerida"])}</div>{acc_txt}{extra}</div>', unsafe_allow_html=True)
             if r.get("guion"):
-                st.markdown(f'<div class="card" style="margin-top:12px"><div class="ic">🗣️</div><div class="ct">Guion '
+                st.markdown(f'<div class="card" style="margin-top:12px"><div class="ic">{ic("record_voice_over")}</div><div class="ct">Guion '
                             f'sugerido</div><div class="cx">{_e(r["guion"])}</div></div>', unsafe_allow_html=True)
             if r.get("evidencia"):
                 ver = {True: " · cita verificada", False: " · cita no verificada"}.get(r.get("evidencia_verificada"), "")
@@ -894,7 +914,7 @@ with tabs[6]:
                                 axis=alt.Axis(format="%", gridColor=GRID, labelColor=INK2, domain=False, ticks=False)),
                         tooltip=["motivo:N", alt.Tooltip("prob:Q", format=".0%")],
                     ).properties(height=max(120, 34 * len(dp))).configure_view(stroke=None)
-                    .configure(background="transparent"), width="stretch")
+                    .configure(background="transparent", font="IBM Plex Sans"), width="stretch")
             if r.get("emociones"):
                 st.markdown("**Emociones:** " + ", ".join(r["emociones"]))
             st.caption("Fuentes: " + " · ".join(f"{k}: {v}" for k, v in r["fuentes"].items()))
@@ -945,7 +965,7 @@ with tabs[6]:
             return "".join(chips)
 
         if not ss.cop_chat:
-            with st.chat_message("assistant", avatar="🧭"):
+            with st.chat_message("assistant", avatar=":material/support_agent:"):
                 st.markdown(AN.SALUDO_CHAT)
             ejemplos_cop = ["El cliente dice que quiere otro plan porque no usa los datos",
                             "Tengo un cliente que llama porque el internet se le cae todas las noches",
@@ -956,10 +976,10 @@ with tabs[6]:
                     ss.cop_pendiente = e
         for i, m in enumerate(ss.cop_chat):
             if m["rol"] == "asesor":
-                with st.chat_message("user", avatar="🎧"):
+                with st.chat_message("user", avatar=":material/headset_mic:"):
                     st.markdown(m["texto"])
             else:
-                with st.chat_message("assistant", avatar="🧭"):
+                with st.chat_message("assistant", avatar=":material/support_agent:"):
                     if m.get("analisis"):
                         st.markdown(_chips(m["analisis"]), unsafe_allow_html=True)
                     st.markdown(m["texto"])
@@ -971,11 +991,11 @@ with tabs[6]:
         nuevo = st.chat_input("Cuéntale al copiloto qué pasa con el cliente…", key="cop_input") or ss.pop("cop_pendiente", None)
         if nuevo:
             ss.cop_chat.append({"rol": "asesor", "texto": nuevo})
-            with st.chat_message("user", avatar="🎧"):
+            with st.chat_message("user", avatar=":material/headset_mic:"):
                 st.markdown(nuevo)
-            with st.chat_message("assistant", avatar="🧭"):
+            with st.chat_message("assistant", avatar=":material/support_agent:"):
                 vista_cop = st.empty()
-                vista_cop.markdown(pill("🧭 Analizando el caso…", "gray"), unsafe_allow_html=True)
+                vista_cop.markdown(pill("Analizando el caso…", "gray"), unsafe_allow_html=True)
                 out = AN.copiloto_chat(ss.cop_chat, usar_llm=hay_llm and modo == "llm", modelo=modelo_elegido,
                                        on_token=lambda t: vista_cop.markdown(t + " ▌"))
             ss.cop_chat.append({"rol": "copiloto", "texto": out["respuesta"], "analisis": out["analisis"],
@@ -1024,7 +1044,7 @@ with tabs[7]:
                               header=alt.Header(labelColor=INK, labelFontSize=13)),
             tooltip=["Método:N", "campo:N", "métrica:N", alt.Tooltip("valor:Q", format=".2f"),
                      alt.Tooltip("kappa:Q", format=".2f"), alt.Tooltip("n:Q", title="llamadas")],
-        ).properties(width=210, height=240).configure_view(stroke=None).configure(background="transparent")
+        ).properties(width=210, height=240).configure_view(stroke=None).configure(background="transparent", font="IBM Plex Sans")
         st.altair_chart(graf)
         st.caption("Motivo y urgencia: exactitud. Sentimiento: correlación con la etiqueta humana (−1 / 0 / 1).")
         with st.expander("Tabla del benchmark"):
