@@ -58,7 +58,7 @@ CSS = f"""
 }}
 .stApp, .stApp p, .stApp li, .stApp label, .stApp input, .stApp textarea, .stApp button, .stApp td, .stApp th,
 .stApp h1, .stApp h2, .stApp h3, .stApp h4,
-.stApp span:not([data-testid="stIconMaterial"]):not(.msr) {{ font-family: 'IBM Plex Sans', sans-serif; }}
+.stApp span:not([data-testid*="Icon"]):not(.msr) {{ font-family: 'IBM Plex Sans', sans-serif; }}
 .stApp {{ background: var(--bg); color: var(--ink); }}
 .block-container {{ padding-top: 3rem; padding-bottom: 3rem; max-width: 1320px; }}
 h1, h2, h3 {{ letter-spacing: -0.01em; color: var(--ink); }}
