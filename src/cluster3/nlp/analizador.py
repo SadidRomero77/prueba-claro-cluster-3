@@ -27,7 +27,7 @@ from cluster3.nlp import taxonomy as tx
 from cluster3.nlp.baseline import classify_row
 from cluster3.nlp.preprocess import preprocess_calls
 
-PROMPT_VERSION = "copiloto-v1.1"
+PROMPT_VERSION = "copiloto-v1.2"
 MIN_CARACTERES = 40
 ROL_RE = re.compile(r"^\s*(cliente|client|usuario|asesor|agente|agent)\s*:\s*", re.I | re.M)
 # Respaldo sin API. Incluye formas implícitas: Jev las detecta por el sentido, las reglas necesitan la frase.
@@ -309,7 +309,8 @@ def turnos_de_llamada(texto_anonimizado: str) -> list[dict]:
 # --------------------------------------------------------------------------------------------- copiloto (chat)
 CHAT_PROMPT = f"""Eres el copiloto de un asesor de retención de Claro Colombia (clientes del hogar, Cluster 3).
 El asesor te escribe en lenguaje natural lo que dice o le pasa al cliente y te pide ayuda. Conversa con él como un
-colega experto: breve (máximo 6 frases o viñetas cortas), directo, en español de Colombia, tuteando al asesor.
+colega experto: breve (máximo 6 frases o viñetas cortas), directo, en español de Colombia, tuteando al asesor
+("puedes decirle", "pregúntale"); nunca uses voseo ("podés", "tenés", "vos").
 
 Con cada mensaje recibes el ANÁLISIS del caso (intención de cancelar, motivo, urgencia, sentimiento, oferta sugerida,
 pregunta sugerida, alertas y contexto del Cluster 3). Úsalo así:
