@@ -24,7 +24,7 @@ uv run cluster3                                   # pipeline completo (~2 min, s
 uv run cluster3 --desde accionables               # retomar desde una etapa
 uv run cluster3 --llm --jev                       # con LLM y Jev (requiere .env)
 uv run streamlit run src/cluster3/app/streamlit_app.py
-uv run python -m cluster3.agents.evals --offline  # 9 preguntas doradas
+uv run python -m cluster3.agents.evals --offline  # 13 preguntas doradas
 uv run python -m cluster3.nlp.etiquetar           # etiquetar la muestra de 50 llamadas
 uv run python -m cluster3.nlp.run --llm --jev --solo-muestra
 uv run pytest && uv run ruff check src tests
@@ -97,11 +97,13 @@ cifras respaldadas 92 %, juez 4,46/5 en fidelidad; 13 preguntas), app Streamlit 
 Fase 1 del copiloto hecha: pestaña Copiloto (analizar llamada + copiloto en chat, `copiloto_chat`) y herramienta
 `analizar_transcripcion` en el chat. Fase 2 (agente de retención) documentada en `docs/08`.
 
-Pendiente, en este orden:
 Despliegues hechos: Databricks Free Edition (tablas medallion en `workspace.cluster3`, modelos en UC con alias
 `champion`, app `cluster3-churn`) y AWS (EC2 + Docker + Caddy, `cluster3.kibosecondbrain.com` con usuario/clave).
+Presentación de 21 diapositivas, video de la demo (https://youtu.be/_SdnYuOCVBM) y costos de IA medidos
+(`docs/09_costos_ia.md`). La app de Databricks Free Edition se apaga sola a las 24 h: arrancarla antes de cada demo.
 
-1. Preparar la presentación para la sustentación (la app es la demo en vivo).
+Pendiente, en este orden:
+1. Documento de entrega formal; ensayar la sustentación (la app es la demo en vivo).
 2. Validar con Claro: significado del sufijo I, `MOTIVO_LLAM_CANCELA`, supuestos económicos.
 
 ## Confidencialidad

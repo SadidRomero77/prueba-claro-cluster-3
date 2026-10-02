@@ -2,7 +2,15 @@
 
 Prueba técnica de IA Senior Engineer. Análisis de churn e intención de cancelación del Cluster 3
 (20.000 clientes, periodo 202508) y de 500 llamadas de cancelación, con un sistema multiagente para
-conversar con los datos y los modelos.
+conversar con los datos y los modelos, y un copiloto para el asesor de retención.
+
+**Video de la demo (3:32):** https://youtu.be/_SdnYuOCVBM
+
+| Dónde verlo | Enlace | Acceso |
+|---|---|---|
+| App en Databricks | https://cluster3-churn-7474654113984297.aws.databricksapps.com | Usuarios del workspace |
+| App en AWS (respaldo) | https://cluster3.kibosecondbrain.com | Usuario y clave, a solicitud |
+| Código | Este repositorio | Público |
 
 | Entregable | Dónde |
 |---|---|
@@ -14,6 +22,7 @@ conversar con los datos y los modelos.
 | Arquitectura Databricks, MLOps y LLMOps | `docs/06_arquitectura_databricks_llmops.md` |
 | Accionables e impacto económico | `docs/07_accionables.md` |
 | Analizador de llamadas, copiloto del asesor y siguientes pasos | `docs/08_copiloto_y_siguientes_pasos.md` |
+| Costo de la IA (por llamada, por pregunta y por turno) | `docs/09_costos_ia.md` |
 | Supuestos y decisiones | `docs/supuestos_y_decisiones.md` |
 | App (dashboard + chat con agentes) | `src/cluster3/app/streamlit_app.py` |
 | Presentación ejecutiva (21 diapositivas) | https://claude.ai/artifact/Sa8uh8pebEQDgmyNWiEjaA (privada: compartir desde Share) |
@@ -33,7 +42,10 @@ conversar con los datos y los modelos.
 - Llamadas clasificadas con un método híbrido elegido contra 50 llamadas etiquetadas a mano (Jev para motivo y
   sentimiento, LLM para urgencia y evidencia): precio y facturación es el motivo identificable principal (24,3 % de
   las llamadas del Cluster 3) y el 28,2 % no tiene un motivo claro.
-- Seis accionables priorizados por impacto y esfuerzo, con impacto anual en tres escenarios.
+- Seis accionables priorizados por impacto y esfuerzo: $195,7 M al año en el escenario base (30 % de éxito).
+- Sistema multiagente con 15 herramientas: 13 preguntas doradas con ruta correcta 100 %, cifras respaldadas 92 % y
+  juez LLM 4,46/5 en fidelidad.
+- Costo de la IA: US$0,0125 por llamada clasificada, US$0,026 por pregunta al agente y US$0,006 por turno del copiloto.
 
 ## Inicio rápido
 
@@ -58,12 +70,13 @@ Etapas: `calidad → limpieza → eda → modelo → nlp → accionables → rep
 
 ## Sistema multiagente
 
-LangGraph: orquestador → especialistas (perfilado, voz del cliente, estrategia) → aprobación humana si la acción
-exporta datos → síntesis → crítico que verifica cada cifra contra la evidencia de las herramientas.
+LangGraph: orquestador (Claude Haiku 4.5) → especialistas con 15 herramientas (perfilado, voz del cliente,
+estrategia; Claude Sonnet 5) → aprobación humana si la acción exporta datos → síntesis → crítico que verifica cada
+cifra contra la evidencia de las herramientas.
 
 ```bash
 uv run python -m cluster3.agents.graph "¿Qué variables explican la intención de cancelación?"
-uv run python -m cluster3.agents.evals            # 9 preguntas doradas (+ juez LLM si hay clave)
+uv run python -m cluster3.agents.evals            # 13 preguntas doradas (+ juez LLM si hay clave)
 uv run python -m cluster3.agents.evals --offline
 ```
 
@@ -95,8 +108,11 @@ uv run ruff check src tests
 
 ## Despliegue
 
-- Databricks Free Edition: `databricks.yml`, `app.yaml`, `notebooks/databricks/pipeline_job.py` → `deploy/databricks/README.md`
-- AWS (EC2 + Docker + Caddy + Cloudflare + SSM): `Dockerfile`, `deploy/aws/` → `deploy/aws/README.md`
+- Databricks Free Edition (desplegado): Asset Bundle con esquema `workspace.cluster3`, Volumes `raw` y `artefactos`,
+  job serverless, tablas Delta bronce/plata/oro, modelos en Unity Catalog con alias `champion` y la app
+  `cluster3-churn`. Archivos: `databricks.yml`, `app.yaml`, `notebooks/databricks/pipeline_job.py` → `deploy/databricks/README.md`
+- AWS (desplegado, respaldo): EC2 + Docker + Caddy + Cloudflare + SSM. Archivos: `Dockerfile`, `deploy/aws/` → `deploy/aws/README.md`
+- Arquitectura, MLOps y LLMOps: `docs/06_arquitectura_databricks_llmops.md`
 
 ## Estructura
 
